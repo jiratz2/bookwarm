@@ -14,8 +14,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #000000;
   }
 }
 
@@ -23,4 +23,31 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.word-wrap {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.inputbox {
+  flex-shrink: 0;
+  background-color: white;
+  border-radius: 0.75rem; /* rounded-xl */
+  border: 2px solid #1e40af; /* border-blue-800 */
+  height: 50px;
+  max-width: 100%;
+  padding-left: 1.5rem; /* px-6 */
+  padding-right: 1.5rem; /* px-6 */
+  margin-left: 1.25rem; /* mx-5 */
+  margin-right: 1.25rem; /* mx-5 */
+}
+
+.inputbox:focus {
+  border-color: #ec4899; /* focus:border-pink-500 */
+  outline: 2px solid #ec4899; /* focus:outline focus:outline-pink-500 */
+}
+.text-res {
+  font-size: clamp(1rem, 1.25rem, 1.5rem);
 }
