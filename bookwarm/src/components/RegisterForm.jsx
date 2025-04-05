@@ -3,7 +3,13 @@ import { motion } from "framer-motion";
 
 function RegisterForm() {
   return (
-    <form className="text-res flex flex-col max-md:mt-5 max-md:max-w-full">
+    <motion.form
+      className="text-res flex flex-col max-md:mt-5 max-md:max-w-full"
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
+    >
       <label className="self-start ml-5 mt-10 text-xl text-black max-md:mt-5">
         E-mail
       </label>
@@ -44,12 +50,12 @@ function RegisterForm() {
         type="submit"
         className="px-16 mx-5 py-3 mt-12 text-xl text-white bg-blue-800 rounded-xl max-md:px-5 
         max-md:mt-10 max-md:max-w-full hover:bg-pink-500 transition-colors cursor-pointer"
-        whileTap={{scale: 0.9}}
-        whileHover={{scale:1.0}}
+        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.0 }}
       >
         Register
-        </motion.button>
-    </form>
+      </motion.button>
+    </motion.form>
   );
 }
 

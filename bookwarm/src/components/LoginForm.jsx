@@ -2,10 +2,15 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-
 const LoginForm = () => {
   return (
-    <form className="text-res flex flex-col max-md:mt-5 max-md:max-w-full max-md:m-10">
+    <motion.form
+      className="text-res flex flex-col max-md:mt-5 max-md:max-w-full max-md:m-10"
+      layout
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
+    >
       <label className=" self-start ml-5 mt-10 text-black max-md:mt-5">
         E-mail
       </label>
@@ -16,14 +21,8 @@ const LoginForm = () => {
         required
       />
 
-      <label className="self-start mt-3.5 ml-5 text-black ">
-        Password
-      </label>
-      <input
-        type="password"
-        className="inputbox max-md:max-w-full"
-        required
-      />
+      <label className="self-start mt-3.5 ml-5 text-black ">Password</label>
+      <input type="password" className="inputbox max-md:max-w-full" required />
 
       <motion.button
         type="submit"
@@ -34,7 +33,7 @@ const LoginForm = () => {
       >
         Sign in
       </motion.button>
-    </form>
+    </motion.form>
   );
 };
 

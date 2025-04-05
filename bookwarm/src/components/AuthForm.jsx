@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
+import { motion } from "framer-motion";
 
 const AuthForm = () => {
   const [activeTab, setActiveTab] = useState("sign in");
@@ -17,9 +18,15 @@ const AuthForm = () => {
             activeTab === "sign in" ? "text-black" : "text-neutral-400"
           }`}
         >
+
           <span className="cursor-pointer">Sign in</span>
           {activeTab === "sign in" && (
-            <div className="bg-blue-800 h-[5px] w-[120px] mt-1" />
+            <motion.div className="bg-blue-800 h-[5px] w-[120px] mt-1"
+            layout
+            initial={{  opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            />
           )}
         </button>
 
@@ -32,7 +39,13 @@ const AuthForm = () => {
         >
           <span className="cursor-pointer">Register</span>
           {activeTab === "register" && (
-            <div className="bg-blue-800 h-[5px] w-[120px] mt-1" />
+            <motion.div 
+            className="bg-blue-800 h-[5px] w-[120px] mt-1"
+            layout
+            initial={{  opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+           />
           )}
         </button>
       </div>
