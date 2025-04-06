@@ -6,7 +6,7 @@ export function SearchBar() {
       <div className="relative mx-auto max-w-full">
         <input
           type="search"
-          placeholder="Search books..."
+          placeholder="Search..."
           className=" w-full bg-white rounded-3xl border border-black shadow-sm h-[30px] pl-4 pr-12"
           aria-label="Search books"
         />
