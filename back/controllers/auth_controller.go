@@ -5,6 +5,7 @@ import (
 	"back/models"
 	"back/utils"
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -17,8 +18,8 @@ import (
 func Register(c *gin.Context) {
 	var input struct {
 		Email       string `json:"email"`
-		Password    string `json:"password"`
 		DisplayName string `json:"displayname"`
+		Password    string `json:"password"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -35,9 +36,8 @@ func Register(c *gin.Context) {
 	collection := config.DB.Database("bookwarm").Collection("users")
 
 	user := models.User{
-
-		DisplayName: input.DisplayName,
 		Email:       input.Email,
+		DisplayName: input.DisplayName,
 		Password:    string(hash),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -56,13 +56,6 @@ func Register(c *gin.Context) {
 		"message": "User registered successfully",
 		"user_id": id.Hex(),
 	})
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB insert error"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
 func Login(c *gin.Context) {
@@ -78,6 +71,10 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("Login request for email:", input.Email)
+	fmt.Println("Password from request:", input.Password)
+	fmt.Println("Password from DB:", user.Password)
+
 	collection := config.DB.Database("bookwarm").Collection("users")
 	err := collection.FindOne(context.TODO(), bson.M{"email": input.Email}).Decode(&user)
 	if err != nil {
@@ -87,15 +84,21 @@ func Login(c *gin.Context) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 	if err != nil {
+		fmt.Println("Password mismatch error:", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Password"})
 		return
 	}
 
 	token, _ := utils.CreateToken(user.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"token":        token,
-		"displayname":  user.DisplayName,
-		"profile_img_url":  user.ProfilePic,
+		"message":         "User login successfully",
+		"token":           token,
+		"displayname":     user.DisplayName,
+		"profile_img_url": user.ProfilePic,
 	})
 }
 
@@ -112,8 +115,8 @@ func Profile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":         user.ID,
-		"displayname":    user.DisplayName,
+		"id":              user.ID,
+		"displayname":     user.DisplayName,
 		"email":           user.Email,
 		"profile_img_url": user.ProfilePic,
 		"bg_img_url":      user.BgImgURL,
