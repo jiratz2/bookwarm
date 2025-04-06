@@ -1,9 +1,9 @@
 import React from "react";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { IoMdEye, IoMdEyeOff, IoIosCheckmark } from "react-icons/io";
+import { FiX } from "react-icons/fi";
 
 function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -12,6 +12,7 @@ function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validatePassword = (password) => {
     const hasLetters = /[a-zA-Z]/.test(password);
@@ -21,14 +22,14 @@ function RegisterForm() {
 
     let message = "";
 
-    if (!hasMinLength ) {
-      message = "Password must be at least 8 characters long.";
+    if (!hasMinLength) {
+      message = "";
     } else if (!hasLetters) {
-      message = "Password must contain at least one letter.";
+      message = "";
     } else if (!hasNumbers) {
-      message = "Password must contain at least one number.";
+      message = "";
     } else if (!hasSpecialChars) {
-      message = "Password must contain at least one special character.";
+      message = "";
     }
 
     return {
@@ -41,11 +42,11 @@ function RegisterForm() {
     const passwordValue = e.target.value;
     setPassword(passwordValue);
 
-    const {isValid, message} = validatePassword(passwordValue);
+    const { isValid, message } = validatePassword(passwordValue);
 
-    if(!isValid){
+    if (!isValid) {
       setErrorMessage(message);
-    }else{
+    } else {
       setErrorMessage("");
     }
   };
@@ -64,7 +65,7 @@ function RegisterForm() {
       return;
     }
 
-    try{
+    try {
       const res = await fetch("http://localhost:8080/api/register", {
         method: "POST",
         headers: {
@@ -78,10 +79,10 @@ function RegisterForm() {
         }),
       });
 
-      if (res.ok){
-        console.log("User register successfully");
+      if (res.ok) {
+        console.log("User registered successfully");
         setErrorMessage("");
-        toast.success("User registered successfully!",{
+        toast.success("User registered successfully!", {
           duration: 3000,
           position: "top-right",
         });
@@ -89,7 +90,7 @@ function RegisterForm() {
           window.location.href = "/";
         }, 1000);
       }
-    }catch (error) {
+    } catch (error) {
       console.log("Error: ", error);
     }
   };
@@ -110,7 +111,7 @@ function RegisterForm() {
         onChange={(e) => setEmail(e.target.value)}
         type="email"
         placeholder="Example@domain.com"
-        className="inputbox max-md:max-w-full text-sm"
+        className="inputbox max-md:max-w-full text-res-s"
         required
       />
 
@@ -121,7 +122,7 @@ function RegisterForm() {
         onChange={(e) => setDisplayName(e.target.value)}
         type="text"
         placeholder="You can change it later."
-        className="inputbox max-md:max-w-full text-sm"
+        className="inputbox max-md:max-w-full text-res-s"
       />
 
       <label className="self-start mt-3.5 ml-5 text-xl text-black ">
@@ -131,45 +132,101 @@ function RegisterForm() {
         onChange={handlePasswordChange}
         type={showPassword ? "text" : "password"}
         placeholder="Enter your password"
-        className="inputbox max-md:max-w-full text-sm"
+        className="inputbox max-md:max-w-full text-res-s"
         required
       />
+      <div className="mt-2 ml-5 text-sm font-light space-y-1">
+        {/* Check for minimum length */}
+        <div className="flex items-center gap-2">
+          {password.length >= 8 ? (
+            <IoIosCheckmark className="text-green-500" />
+          ) : (
+            <FiX className="text-red-500" />
+          )}
+          <p className={password.length >= 8 ? "text-green-600" : "text-red-500"}>
+            Password must be at least 8 characters long.
+          </p>
+        </div>
 
-      {errorMessage && <p className="text-red-500 text-sm font-light mt-2">{errorMessage}</p>}
+        {/* Check for letters */}
+        <div className="flex items-center gap-2">
+          {/[a-zA-Z]/.test(password) ? (
+            <IoIosCheckmark className="text-green-500" />
+          ) : (
+            <FiX className="text-red-500" />
+          )}
+          <p className={/[a-zA-Z]/.test(password) ? "text-green-600" : "text-red-500"}>
+            Password must contain at least one letter.
+          </p>
+        </div>
+
+        {/* Check for numbers */}
+        <div className="flex items-center gap-2">
+          {/\d/.test(password) ? (
+            <IoIosCheckmark className="text-green-500" />
+          ) : (
+            <FiX className="text-red-500" />
+          )}
+          <p className={/\d/.test(password) ? "text-green-600" : "text-red-500"}>
+            Password must contain at least one number.
+          </p>
+        </div>
+
+        {/* Check for special characters */}
+        <div className="flex items-center gap-2">
+          {/[!@#$%^&*(),.?":{}|<>]/.test(password) ? (
+            <IoIosCheckmark className="text-green-500" />
+          ) : (
+            <FiX className="text-red-500" />
+          )}
+          <p
+            className={
+              /[!@#$%^&*(),.?":{}|<>]/.test(password)
+                ? "text-green-600"
+                : "text-red-500"
+            }
+          >
+            Password must contain at least one special character.
+          </p>
+        </div>
+      </div>
+
+      {errorMessage && (
+        <p className="text-red-500 text-sm font-light mt-2">{errorMessage}</p>
+      )}
 
       <button
         type="button"
         onClick={() => setShowPassword(!showPassword)}
-        className="absolute inset-y-11 right-2 flex items-center text-gray-500 hover:text-gray-700"
+        className="absolute inset-y-11 top-11 right-10 flex items-center text-gray-500 hover:text-gray-700"
       >
-          {showPassword ? (
+        {showPassword ? (
           <IoMdEyeOff className="h-5 w-5" />
-          ) : (
+        ) : (
           <IoMdEye className="h-5 w-5" />
-          )}
+        )}
       </button>
-      
 
       <label className="self-start mt-3.5 ml-5 text-xl text-black ">
         Confirm Password
       </label>
       <input
         onChange={(e) => setConfirmPassword(e.target.value)}
-        type="password"
+        type={showConfirmPassword ? "text" : "password"}
         placeholder="Confirm your password"
-        className="inputbox max-md:max-w-full text-sm"
+        className="inputbox max-md:max-w-full text-res-s"
         required
       />
       <button
         type="button"
-        onClick={() => setShowPassword(!showPassword)}
-        className="absolute inset-y-20 right-2 flex items-center text-gray-500 hover:text-gray-700"
+        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+        className="absolute inset-y-20 top-116 right-10 flex items-center text-gray-500 hover:text-gray-700"
       >
-          {showPassword ? (
+        {showConfirmPassword ? (
           <IoMdEyeOff className="h-5 w-5" />
-          ) : (
+        ) : (
           <IoMdEye className="h-5 w-5" />
-          )}
+        )}
       </button>
 
       <motion.button

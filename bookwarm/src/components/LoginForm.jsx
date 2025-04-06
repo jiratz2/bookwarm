@@ -67,8 +67,8 @@ const LoginForm = () => {
       <input
         onChange={(e) => setEmail(e.target.value)}
         type="email"
-        placeholder="example@domain.com"
-        className="inputbox max-md:max-w-full"
+        placeholder="Example@domain.com"
+        className="inputbox max-md:max-w-full text-res-s"
         required
       />
 
@@ -80,7 +80,7 @@ const LoginForm = () => {
           onChange={(e) => setPassword(e.target.value)}
           type={showPassword ? "text" : "password"}
           placeholder="Enter your password"
-          className="inputbox max-md:max-w-full pr-12" // เพิ่ม padding ขวาให้มีพื้นที่สำหรับปุ่ม
+          className="inputbox max-md:max-w-full pr-12 text-res-s" // เพิ่ม padding ขวาให้มีพื้นที่สำหรับปุ่ม
           required
         />
         <button

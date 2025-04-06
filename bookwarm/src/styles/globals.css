@@ -52,6 +52,9 @@ body {
 .text-res {
   font-size: clamp(1rem, 1.25rem, 1.5rem);
 }
+.text-res-s {
+  font-size: clamp(0.75rem, 1rem, 1.25rem);
+}
 .button{
   background-color: #1e40af; /* bg-blue-800 */
   color: white;
