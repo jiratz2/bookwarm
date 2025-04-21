@@ -11,7 +11,6 @@ func AuthRoutes(router *gin.Engine) {
 	{
 		auth.POST("/login", controllers.Login)
 		auth.POST("/register", controllers.Register)
-		auth.POST("/logout", middleware.JWTAuthMiddleware(),controllers.Logout)
 		auth.GET("/profile", middleware.JWTAuthMiddleware(), controllers.Profile)
 	}
 }
