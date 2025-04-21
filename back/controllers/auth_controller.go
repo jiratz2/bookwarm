@@ -102,46 +102,6 @@ func Login(c *gin.Context) {
 	})
 }
 
-func Logout(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error" : "Token is missing"})
-		return
-	}
-
-	blacklisted := blacklistedTokenInDatabase(token)
-	if blacklisted {
-		c.JSON(http.StatusUnauthorized, gin.H{"error" : "Token has already been blacklisted"})
-		return
-	}
-
-	err := addTokenToBlacklist(token)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error" : "Failed to blecklist token"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message" : "Successfully logged out"})
-}
-
-func addTokenToBlacklist(token string) error {
-	collection := config.DB.Database("bookwarm").Collection("blacklisted_tokens")
-	_, err := collection.InsertOne(context.TODO(), bson.M{"token" : token, "created_at" : time.Now()})
-	return err
-}
-
-func blacklistedTokenInDatabase(token string) bool {
-	collection := config.DB.Database("bookwarm").Collection("blacklisted_tokens")
-	var result struct {
-		Token string `bson:"token"`
-	}
-	err := collection.FindOne(context.TODO(), bson.M{"token" : token}).Decode(&result)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
 func Profile(c *gin.Context) {
 	emailRaw, _ := c.Get("user")
 	email := emailRaw.(string)
