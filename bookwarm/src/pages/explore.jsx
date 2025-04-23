@@ -6,7 +6,7 @@ const Explore = () => {
   const [filters, setFilters] = useState({ tags: [], categories: [] });
 
   return (
-    <div className="explore">
+    <div className="explore mt-[100px]">
       <main className="explore-layout">
         <aside className="explore-sidebar">
           <Filter setFilters={setFilters} />

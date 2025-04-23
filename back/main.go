@@ -21,6 +21,10 @@ func main() {
 	
 	config.ConnectDB()
 	routes.AuthRoutes(router)
+	routes.CategoryRoutes(router)
+	routes.GenreRoutes(router)
+	routes.TagRoutes(router)
+	routes.AuthorRoutes(router)
 	
 
 	router.Run(":8080")

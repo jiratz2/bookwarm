@@ -230,7 +230,8 @@ body {
   .action-button {
     align-self: flex-end;
   }
-=======
+}
+
 .word-wrap {
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -319,5 +320,4 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-
 }
