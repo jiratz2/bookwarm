@@ -103,11 +103,15 @@ func Login(c *gin.Context) {
 }
 
 func Profile(c *gin.Context) {
-	emailRaw, _ := c.Get("user")
+	emailRaw, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 	email := emailRaw.(string)
 
 	var user models.User
-	collection := config.DB.Database("courtminton").Collection("user")
+	collection := config.DB.Database("bookwarm").Collection("users")
 	err := collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
@@ -115,12 +119,60 @@ func Profile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":              user.ID,
 		"displayname":     user.DisplayName,
-		"email":           user.Email,
 		"profile_img_url": user.ProfilePic,
 		"bg_img_url":      user.BgImgURL,
 		"bio":             user.Bio,
+		"gender":          user.Gender,
+		"date_of_birth":   user.DateOfBirth,
+		"phone_number":    user.PhoneNumber,
+		"email":           user.Email, // ตรวจสอบว่ามีการส่ง email กลับมาหรือไม่
 		"created_at":      user.CreatedAt,
+		"updated_at":      user.UpdatedAt,
+	})
+}
+
+func UpdateProfile(c *gin.Context) {
+	emailRaw, _ := c.Get("user")
+	email := emailRaw.(string)
+
+	var input struct {
+		DisplayName string `json:"displayname"`
+		ProfilePic  string `json:"profile_img_url"`
+		BgImgURL    string `json:"bg_img_url"`
+		Bio         string `json:"bio"`
+		Gender      string `json:"gender"`
+		DateOfBirth string `json:"date_of_birth"`
+		PhoneNumber string `json:"phone_number"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	collection := config.DB.Database("bookwarm").Collection("users")
+
+	update := bson.M{
+		"$set": bson.M{
+			"displayname":     input.DisplayName,
+			"profile_img_url": input.ProfilePic,
+			"bg_img_url":      input.BgImgURL,
+			"bio":             input.Bio,
+			"gender":          input.Gender,
+			"date_of_birth":   input.DateOfBirth,
+			"phone_number":    input.PhoneNumber,
+			"updated_at":      time.Now(),
+		},
+	}
+
+	_, err := collection.UpdateOne(context.TODO(), bson.M{"email": email}, update)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Profile updated successfully",
 	})
 }

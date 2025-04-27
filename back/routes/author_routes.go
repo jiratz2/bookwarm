@@ -7,11 +7,11 @@ import (
 )
 
 func AuthorRoutes(router *gin.Engine){
-	category := router.Group("/api/authors")
+	authors := router.Group("/api/authors")
 	{
-		category.GET("/", controllers.GetAllAuthor)
-		category.POST("/",controllers.CreateAuthor)
-		category.PUT("/:id", controllers.UpdateAuthor)
-		category.DELETE("/:id", controllers.DeleteAuthor)
+		authors.GET("/", controllers.GetAllAuthor)
+		authors.POST("/",controllers.CreateAuthor)
+		authors.PUT("/:id", controllers.UpdateAuthor)
+		authors.DELETE("/:id", controllers.DeleteAuthor)
 	}
 }
