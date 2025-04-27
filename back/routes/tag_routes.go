@@ -5,11 +5,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 func TagRoutes(router *gin.Engine){
-	category := router.Group("/api/tags")
+	tags := router.Group("/api/tags")
 	{
-		category.GET("/", controllers.GetAllTag)
-		category.POST("/",controllers.CreateTag)
-		category.PUT("/:id", controllers.UpdateTag)
-		category.DELETE("/:id", controllers.DeleteTag)
+		tags.GET("/", controllers.GetAllTag)
+		tags.POST("/",controllers.CreateTag)
+		tags.PUT("/:id", controllers.UpdateTag)
+		tags.DELETE("/:id", controllers.DeleteTag)
 	}
 }

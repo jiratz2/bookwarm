@@ -5,11 +5,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 func GenreRoutes(router *gin.Engine){
-	category := router.Group("/api/genres")
+	genres := router.Group("/api/genres")
 	{
-		category.GET("/", controllers.GetAllGenre)
-		category.POST("/",controllers.CreateGenre)
-		category.PUT("/:id", controllers.UpdateGenre)
-		category.DELETE("/:id", controllers.DeleteGenre)
+		genres.GET("/", controllers.GetAllGenre)
+		genres.POST("/",controllers.CreateGenre)
+		genres.PUT("/:id", controllers.UpdateGenre)
+		genres.DELETE("/:id", controllers.DeleteGenre)
 	}
 }

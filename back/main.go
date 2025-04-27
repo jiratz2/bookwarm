@@ -25,6 +25,9 @@ func main() {
 	routes.GenreRoutes(router)
 	routes.TagRoutes(router)
 	routes.AuthorRoutes(router)
+	routes.BooksRoutes(router)
+	routes.ReviewRoutes(router)
+	routes.MarkRoutes(router)
 	
 
 	router.Run(":8080")
