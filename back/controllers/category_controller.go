@@ -33,7 +33,7 @@ func CreateCategory(c *gin.Context) {
 
 func GetAllCategory(c *gin.Context) {
 	collection := config.DB.Database("bookwarm").Collection("category")
-	cursor, err := collection.Find(context.TODO(),bson.D{})
+	cursor, err := collection.Find(context.TODO(), bson.D{})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch category"})
@@ -49,7 +49,7 @@ func GetAllCategory(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode category"})
 			return
 		}
-		categories = append(categories,category)
+		categories = append(categories, category)
 	}
 	c.JSON(http.StatusOK, categories)
 }

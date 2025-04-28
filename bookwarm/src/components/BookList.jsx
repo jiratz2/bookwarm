@@ -1,41 +1,21 @@
-import React from 'react';
-
-const books = [
-  {
-    title: "A Good Girl's Guide To Murder",
-    author: "Holly Jackson",
-    description: "rating",
-    tags: ["Mystery", "Thriller"],
-    image: "https://example.com/image1.jpg",
-  },
-  {
-    title: "Fourth Wing",
-    author: "Rebecca Yarros",
-    description: "rating",
-    tags: ["Fantasy", "Adventure"],
-    image: "https://example.com/image2.jpg",
-  },
-  {
-    title: "A Curse for True Love",
-    author: "Stephanie Garber",
-    description: "rating",
-    tags: ["Romance", "Fantasy"],
-    image: "https://example.com/image3.jpg",
-  },
-];
+import React, { useEffect, useState } from "react";
 
 const Book = ({ title, author, description, tags, image }) => {
   return (
     <div className="book">
-      <img src={image} alt={title} className="book-image" />
+      <img
+        src={image || "https://via.placeholder.com/150"}
+        alt={title}
+        className="book-image"
+      />
       <div className="book-details">
         <h3>{title}</h3>
         <p>{author}</p>
-        <p>{description}</p>
+        {description && <p>{description}</p>}
         <div className="tags">
           {tags.map((tag, index) => (
             <span key={index} className="tag">
-              {tag}
+              {tag.name}
             </span>
           ))}
         </div>
@@ -46,26 +26,57 @@ const Book = ({ title, author, description, tags, image }) => {
 };
 
 const BookList = ({ filters }) => {
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/books/");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setBooks(data);
+      } catch (error) {
+        console.error("Failed to fetch books:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
+  }, []);
+
   const filteredBooks = books.filter((book) => {
     const matchesTags =
-      filters.tags.length === 0 || filters.tags.some((tag) => book.tags.includes(tag));
+      filters.tags.length === 0 ||
+      filters.tags.some((tag) => book.tags.some((t) => t._id === tag));
     const matchesCategories =
-      filters.categories.length === 0 || filters.categories.includes(book.category);
+      filters.categories.length === 0 ||
+      filters.categories.includes(book.category[0]._id);
     return matchesTags && matchesCategories;
   });
 
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
   return (
     <div className="book-list">
-      {filteredBooks.map((book, index) => (
-        <Book
-          key={index}
-          title={book.title}
-          author={book.author}
-          description={book.description}
-          tags={book.tags}
-          image={book.image}
-        />
-      ))}
+      {filteredBooks.length === 0 ? (
+        <p>No books found.</p>
+      ) : (
+        filteredBooks.map((book) => (
+          <Book
+            key={book._id}
+            title={book.title}
+            author={book.author[0]?.name || "Unknown Author"}
+            tags={book.tags || []}
+            image={book.coverImage || "https://via.placeholder.com/150"} // <--- ถูกแล้ว แต่ขึ้นอยู่กับหลังบ้านส่งอะไรมา
+          />
+        ))
+      )}
     </div>
   );
 };
