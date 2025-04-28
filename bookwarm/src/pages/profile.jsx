@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 export default function profile() {
@@ -13,8 +14,9 @@ export default function profile() {
             vocal, vocal FX & heavy synths. L
           </p>
         </div>
-
+        <Link href="/editprofile" > 
         <button className="button">Edit profile</button>
+        </Link>
       </div>
 
       <div  className="mx-[140px] mt-10">
