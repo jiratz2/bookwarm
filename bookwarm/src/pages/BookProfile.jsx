@@ -23,14 +23,10 @@ const BookProfile = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto mt-20"> {/* เพิ่ม mt-20 เพื่อเลื่อนลงมา 80px */}
+    <div className="p-6 max-w-4xl mx-auto mt-20"> =
       {/* ส่วนหัว */}
       <div className="flex gap-6">
-        <img
-          src="https://example.com/image3.jpg"
-          alt="A Curse for True Love"
-          className="w-48 h-72 object-cover rounded-md"
-        />
+        <div className="bg-gray-600 w-[150px] h-[200px] my-5"></div>
         <div>
           <h1 className="text-2xl font-bold">A Curse for True Love</h1>
           <p className="text-gray-600">By Stephanie Garber</p>
