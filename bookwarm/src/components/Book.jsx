@@ -1,22 +1,17 @@
-import React from 'react';
+import React from "react";
 
-const Book = ({ title, author, description, tags, image }) => {
+const Book = ({ title, description, authorId, genres, publishYear, pageCount, rating }) => {
   return (
     <div className="book">
-      <img src={image} alt={title} className="book-image" />
       <div className="book-details">
         <h3>{title}</h3>
-        <p>{author}</p>
-        <p>{description}</p>
-        <div className="tags">
-          {tags.map((tag, index) => (
-            <span key={index} className="tag">
-              {tag}
-            </span>
-          ))}
-        </div>
+        <p><strong>Description:</strong> {description}</p>
+        <p><strong>Author ID:</strong> {authorId}</p>
+        <p><strong>Genres:</strong> {genres.join(", ")}</p>
+        <p><strong>Publish Year:</strong> {publishYear}</p>
+        <p><strong>Page Count:</strong> {pageCount}</p>
+        <p><strong>Rating:</strong> {rating}</p>
       </div>
-      <button className="action-button">Want to Read</button>
     </div>
   );
 };
