@@ -9,7 +9,7 @@ const BookList = ({ filters }) => {
   // Fetch books from backend
   const fetchBooks = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/books", {
+      const res = await fetch("http://localhost:8080/api/books/", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -55,11 +55,7 @@ const BookList = ({ filters }) => {
         <Book
           key={index}
           title={book.title}
-          description={book.description}
           authorId={book.authorId}
-          genres={book.genres}
-          publishYear={book.publishYear}
-          pageCount={book.pageCount}
           rating={book.rating}
         />
       ))}
