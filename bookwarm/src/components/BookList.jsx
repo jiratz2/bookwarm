@@ -1,69 +1,66 @@
-import React from 'react';
-
-const books = [
-  {
-    title: "A Good Girl's Guide To Murder",
-    author: "Holly Jackson",
-    description: "rating",
-    tags: ["Mystery", "Thriller"],
-    image: "https://example.com/image1.jpg",
-  },
-  {
-    title: "Fourth Wing",
-    author: "Rebecca Yarros",
-    description: "rating",
-    tags: ["Fantasy", "Adventure"],
-    image: "https://example.com/image2.jpg",
-  },
-  {
-    title: "A Curse for True Love",
-    author: "Stephanie Garber",
-    description: "rating",
-    tags: ["Romance", "Fantasy"],
-    image: "https://example.com/image3.jpg",
-  },
-];
-
-const Book = ({ title, author, description, tags, image }) => {
-  return (
-    <div className="book">
-      <img src={image} alt={title} className="book-image" />
-      <div className="book-details">
-        <h3>{title}</h3>
-        <p>{author}</p>
-        <p>{description}</p>
-        <div className="tags">
-          {tags.map((tag, index) => (
-            <span key={index} className="tag">
-              {tag}
-            </span>
-          ))}
-        </div>
-      </div>
-      <button className="action-button">Want to Read</button>
-    </div>
-  );
-};
+import React, { useEffect, useState } from "react";
+import Book from "./Book";
+import toast from "react-hot-toast";
 
 const BookList = ({ filters }) => {
+  const [books, setBooks] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Fetch books from backend
+  const fetchBooks = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/books", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        credentials: "include", // Include cookies if needed
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setBooks(data);
+        toast.success("Books loaded successfully!", {
+          duration: 3000,
+          position: "top-right",
+        });
+      } else {
+        setErrorMessage("Failed to fetch books.");
+      }
+    } catch (error) {
+      console.error("Error fetching books:", error);
+      setErrorMessage("An error occurred. Please try again later.");
+    }
+  };
+
+  // Fetch books when component loads
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  // Filter books based on filters
   const filteredBooks = books.filter((book) => {
     const matchesTags =
-      filters.tags.length === 0 || filters.tags.some((tag) => book.tags.includes(tag));
+      filters.tags.length === 0 || filters.tags.some((tag) => book.tagIds.includes(tag));
     const matchesCategories =
-      filters.categories.length === 0 || filters.categories.includes(book.category);
+      filters.categories.length === 0 || filters.categories.includes(book.category_id);
     return matchesTags && matchesCategories;
   });
 
   return (
     <div className="book-list">
+      {errorMessage && <div className="text-red-500">{errorMessage}</div>}
       {filteredBooks.map((book, index) => (
         <Book
           key={index}
           title={book.title}
-          author={book.author}
           description={book.description}
-          tags={book.tags}
-          image={book.image}
+          authorId={book.authorId}
+          genres={book.genres}
+          publishYear={book.publishYear}
+          pageCount={book.pageCount}
+          rating={book.rating}
         />
       ))}
     </div>
