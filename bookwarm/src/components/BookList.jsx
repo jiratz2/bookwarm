@@ -1,8 +1,9 @@
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
-const Book = ({ title, author, description, tags, image }) => {
+const Book = ({ title, author, description, tags, image, bookId }) => {
   return (
-    <div className="book">
+    <Link href={`/bookProfile/${bookId}`} className="book">
       <img
         src={image || "https://via.placeholder.com/150"}
         alt={title}
@@ -21,7 +22,7 @@ const Book = ({ title, author, description, tags, image }) => {
         </div>
       </div>
       <button className="action-button">Want to Read</button>
-    </div>
+    </Link>
   );
 };
 
@@ -70,6 +71,7 @@ const BookList = ({ filters }) => {
         filteredBooks.map((book) => (
           <Book
             key={book._id}
+            bookId={book._id}
             title={book.title}
             author={book.author[0]?.name || "Unknown Author"}
             tags={book.tags || []}

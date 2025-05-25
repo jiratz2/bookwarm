@@ -1,8 +1,7 @@
-import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useRouter } from 'next/router';
 
-const bookprofile = () => {
+const BookProfilePage = () => {
   const router = useRouter();
   const { id } = router.query;
   const [book, setBook] = useState(null);
@@ -12,13 +11,23 @@ const bookprofile = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    if(!router.isReady || !id) return; // Wait for router to be ready
-    // ดึงข้อมูลหนังสือจาก backend
+    if (!router.isReady || !id) return;
+    
+    console.log('Fetching book with ID:', id); // เพื่อ debug
+    
     fetch(`http://localhost:8080/api/books/${id}`)
-      .then((res) => res.json())
-      .then((data) => setBook(data))
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log('Book data:', data); // เพื่อ debug
+        setBook(data);
+      })
       .catch((error) => {
-        console.error("Error fetching book data:", error);
+        console.error('Error fetching book:', error);
         setBook(null);
       });
   }, [id, router.isReady]);
@@ -35,8 +44,12 @@ const bookprofile = () => {
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
+  if (!router.isReady) {
+    return <div className="p-6 max-w-4xl mx-auto mt-20">Loading router...</div>;
+  }
+
   if (!book) {
-    return <div className="p-6 max-w-4xl mx-auto mt-20">Loading...</div>;
+    return <div className="p-6 max-w-4xl mx-auto mt-20">Loading book data...</div>;
   }
 
   return (
@@ -165,4 +178,4 @@ const bookprofile = () => {
   );
 };
 
-export default bookprofile;
+export default BookProfilePage;
