@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import NavBar from "@/components/NavBar";
+import NavBar from "@/components/Navbar";
 import Link from "next/link";
 
 export default function Home() {

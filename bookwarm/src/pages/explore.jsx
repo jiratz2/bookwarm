@@ -3,7 +3,7 @@ import Filter from '@/components/Filter';
 import BookList from '@/components/BookList';
 
 const Explore = () => {
-  const [filters, setFilters] = useState({ tags: [], categories: [] });
+  const [filters, setFilters] = useState({ tags: [], categories: [], genres: [] });
 
   return (
     <div className="explore mt-[100px]">

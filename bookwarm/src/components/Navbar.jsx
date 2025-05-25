@@ -27,7 +27,7 @@ const NavBar = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 flex justify-between items-center px-20 w-full bg-white h-[100px] max-md:px-10 max-sm:px-5 max-sm:h-[80px]">
+    <header className="fixed top-0 left-0 flex justify-between items-center px-20 w-full z-50 bg-white h-[100px] max-md:px-10 max-sm:px-5 max-sm:h-[80px]">
       <Link href="/" className="text-3xl font-bold text-black max-sm:text-2xl">
         BookWarm
       </Link>
@@ -37,7 +37,7 @@ const NavBar = () => {
           Home
         </a>
         <a href="/explore" className="font-bold text-black hover:text-blue-800">
-          Discover
+          Explore
         </a>
         <a href="/club" className="font-bold text-black hover:text-blue-800">
           Club

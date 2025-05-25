@@ -321,3 +321,29 @@ body {
   justify-content: center;
   align-items: center;
 }
+.genre-button {
+  display: inline-block;
+  margin: 5px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background-color: #f9f9f9;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.genre-button.active {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.genre-button:hover {
+  background-color: #e0e0e0;
+}
+.book-image {
+  width: 150px;
+  height: 200px;
+  object-fit: cover;
+}
