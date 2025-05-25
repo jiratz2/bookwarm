@@ -3,7 +3,6 @@ package main
 import (
 	"back/config"
 	"back/routes"
-	"back/firebase"
 	"fmt"
 	"os"
 
@@ -12,7 +11,6 @@ import (
 )
 
 func main() {
-	firebase.InitFirebase()
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
