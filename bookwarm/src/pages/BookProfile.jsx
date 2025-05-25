@@ -1,41 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
-const BookProfile = () => {
-  const [rating, setRating] = useState(0); // สำหรับเก็บคะแนนดาว
-  const [review, setReview] = useState(''); // สำหรับเก็บข้อความรีวิว
-  const [reviews, setReviews] = useState([]); // สำหรับเก็บรายการรีวิวทั้งหมด
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // สำหรับจัดการ Dropdown
+const bookprofile = () => {
+  const { id } = useParams();
+  const [book, setBook] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleRating = (value) => {
-    setRating(value); // ตั้งค่าคะแนนดาว
-  };
+  useEffect(() => {
+    // ดึงข้อมูลหนังสือจาก backend
+    fetch(`http://localhost:8080/api/books/${id}`)
+      .then((res) => res.json())
+      .then((data) => setBook(data))
+      .catch(() => setBook(null));
+  }, [id]);
+
+  const handleRating = (value) => setRating(value);
 
   const handleSubmitReview = () => {
     if (review.trim()) {
-      setReviews([...reviews, { text: review, rating }]); // เพิ่มรีวิวใหม่ในรายการ
-      setReview(''); // ล้างข้อความรีวิว
-      setRating(0); // รีเซ็ตคะแนนดาว
+      setReviews([...reviews, { text: review, rating }]);
+      setReview('');
+      setRating(0);
     }
   };
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen); // เปิด/ปิด Dropdown
-  };
+  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+
+  if (!book) {
+    return <div className="p-6 max-w-4xl mx-auto mt-20">Loading...</div>;
+  }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto mt-20"> {/* เพิ่ม mt-20 เพื่อเลื่อนลงมา 80px */}
+    <div className="p-6 max-w-4xl mx-auto mt-20">
       {/* ส่วนหัว */}
       <div className="flex gap-6">
         <img
-          src="https://example.com/image3.jpg"
-          alt="A Curse for True Love"
+          src={book.coverImage || "https://via.placeholder.com/150"}
+          alt={book.title}
           className="w-48 h-72 object-cover rounded-md"
         />
         <div>
-          <h1 className="text-2xl font-bold">A Curse for True Love</h1>
-          <p className="text-gray-600">By Stephanie Garber</p>
-          <p className="text-gray-600">First publish 2023</p>
-          <p className="text-gray-600">383 pages</p>
+          <h1 className="text-2xl font-bold">{book.title}</h1>
+          <p className="text-gray-600">By {book.author?.[0]?.name || "Unknown Author"}</p>
+          <p className="text-gray-600">First publish {book.publishYear || "-"}</p>
+          <p className="text-gray-600">{book.pages || "-"} pages</p>
           <p className="text-gray-600">rating</p>
 
           {/* ปุ่ม Want to Read */}
@@ -70,12 +81,12 @@ const BookProfile = () => {
 
           {/* แท็ก */}
           <div className="flex flex-wrap gap-2 mt-4">
-            {['Tag1', 'Tag2', 'Tag3'].map((tag, index) => (
+            {(book.tags || []).map((tag, index) => (
               <span
                 key={index}
                 className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs"
               >
-                {tag}
+                {tag.name}
               </span>
             ))}
           </div>
@@ -86,7 +97,7 @@ const BookProfile = () => {
       <div className="mt-6">
         <h2 className="text-lg font-bold">Book Info</h2>
         <p className="text-gray-600 mt-2">
-          Evangeline Fox ventured to the Magnificent North in search of her happy ending...
+          {book.description || "No description."}
         </p>
       </div>
 
@@ -148,4 +159,4 @@ const BookProfile = () => {
   );
 };
 
-export default BookProfile;
+export default bookprofile;

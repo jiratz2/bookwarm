@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+  import React, { useState, useEffect } from 'react';
 
 const Filter = ({ setFilters }) => {
   const [selectedTags, setSelectedTags] = useState([]);
@@ -123,28 +123,6 @@ const Filter = ({ setFilters }) => {
           ))}
         </div>
       </div>
-    </div>
-  );
-};
-
-const BookList = ({ loading, filteredBooks }) => {
-  return (
-    <div className="book-list">
-      {loading ? (
-        <p>Loading...</p>
-      ) : filteredBooks.length === 0 ? (
-        <p>No books found.</p>
-      ) : (
-        filteredBooks.map((book) => (
-          <Book
-            key={book._id}
-            title={book.title}
-            author={book.author[0]?.name || "Unknown Author"}
-            tags={book.tags || []}
-            image={book.coverImage || "https://via.placeholder.com/150"}
-          />
-        ))
-      )}
     </div>
   );
 };
