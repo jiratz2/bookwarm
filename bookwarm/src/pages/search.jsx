@@ -63,7 +63,7 @@ export default function SearchPage() {
   );
 
   return (
-    <div className="font-serif px-8 py-6">
+    <div className="font-serif px-8 py-6 mt-12">
       {/* Header */}
       <div className="flex justify-between items-center mb-10">
         <div className="font-bold text-2xl">BookWarm</div>
