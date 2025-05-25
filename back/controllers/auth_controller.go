@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -123,10 +124,7 @@ func Profile(c *gin.Context) {
 		"profile_img_url": user.ProfilePic,
 		"bg_img_url":      user.BgImgURL,
 		"bio":             user.Bio,
-		"gender":          user.Gender,
-		"date_of_birth":   user.DateOfBirth,
-		"phone_number":    user.PhoneNumber,
-		"email":           user.Email, // ตรวจสอบว่ามีการส่ง email กลับมาหรือไม่
+		"email":           user.Email,
 		"created_at":      user.CreatedAt,
 		"updated_at":      user.UpdatedAt,
 	})
@@ -136,43 +134,72 @@ func UpdateProfile(c *gin.Context) {
 	emailRaw, _ := c.Get("user")
 	email := emailRaw.(string)
 
-	var input struct {
-		DisplayName string `json:"displayname"`
-		ProfilePic  string `json:"profile_img_url"`
-		BgImgURL    string `json:"bg_img_url"`
-		Bio         string `json:"bio"`
-		Gender      string `json:"gender"`
-		DateOfBirth string `json:"date_of_birth"`
-		PhoneNumber string `json:"phone_number"`
+	// รับข้อมูลจาก FormData
+	displayName := c.PostForm("displayname")
+	bio := c.PostForm("bio")
+
+	// รับไฟล์รูปภาพโปรไฟล์
+	var profilePicURL string
+	file, err := c.FormFile("profile_picture")
+	if err == nil {
+		// สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
+		if err := os.MkdirAll("uploads", 0755); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create uploads directory"})
+			return
+		}
+		
+		filePath := fmt.Sprintf("uploads/%d_%s", time.Now().Unix(), file.Filename)
+		if err := c.SaveUploadedFile(file, filePath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save profile picture"})
+			return
+		}
+		// ใช้ URL แบบเต็มที่สามารถเข้าถึงได้จาก frontend
+		profilePicURL = fmt.Sprintf("http://localhost:8080/%s", filePath)
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// รับไฟล์ Cover Photo
+	var coverPhotoURL string
+	coverFile, err := c.FormFile("cover_photo")
+	if err == nil {
+		// สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
+		if err := os.MkdirAll("uploads", 0755); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create uploads directory"})
+			return
+		}
+		
+		coverFilePath := fmt.Sprintf("uploads/%d_%s", time.Now().Unix(), coverFile.Filename)
+		if err := c.SaveUploadedFile(coverFile, coverFilePath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save cover photo"})
+			return
+		}
+		// ใช้ URL แบบเต็มที่สามารถเข้าถึงได้จาก frontend
+		coverPhotoURL = fmt.Sprintf("http://localhost:8080/%s", coverFilePath)
 	}
 
 	collection := config.DB.Database("bookwarm").Collection("users")
 
+	// อัปเดตข้อมูลใน MongoDB
 	update := bson.M{
 		"$set": bson.M{
-			"displayname":     input.DisplayName,
-			"profile_img_url": input.ProfilePic,
-			"bg_img_url":      input.BgImgURL,
-			"bio":             input.Bio,
-			"gender":          input.Gender,
-			"date_of_birth":   input.DateOfBirth,
-			"phone_number":    input.PhoneNumber,
-			"updated_at":      time.Now(),
+			"displayname": displayName,
+			"bio":         bio,
+			"updated_at":  time.Now(),
 		},
 	}
 
-	_, err := collection.UpdateOne(context.TODO(), bson.M{"email": email}, update)
+	if profilePicURL != "" {
+		update["$set"].(bson.M)["profile_img_url"] = profilePicURL
+	}
+
+	if coverPhotoURL != "" {
+		update["$set"].(bson.M)["bg_img_url"] = coverPhotoURL
+	}
+
+	_, err = collection.UpdateOne(context.TODO(), bson.M{"email": email}, update)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Profile updated successfully",
-	})
+	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
 }
