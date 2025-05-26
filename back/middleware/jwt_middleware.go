@@ -36,16 +36,21 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || claims["email"] == nil {
+		if !ok || claims["email"] == nil || claims["id"] == nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			c.Abort()
 			return
 		}
 
-		// เพิ่ม email ลงใน Context
+		// ดึง email และ id จาก claims
 		email := claims["email"].(string)
+		userID := claims["id"].(string) // ← ✅ ดึง user ID ด้วย
+
+		// ใส่ไว้ใน context
 		c.Set("user", email)
+		c.Set("userId", userID) // ← ✅ ใส่ userId ลง context
 
 		c.Next()
+
 	}
 }

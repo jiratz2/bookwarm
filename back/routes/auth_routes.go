@@ -14,5 +14,7 @@ func AuthRoutes(router *gin.Engine) {
 		auth.POST("/register", controllers.Register)
 		auth.GET("/profile", middleware.JWTAuthMiddleware(), controllers.Profile) //ตอน test อย่าลืมใส่ token header
 		auth.PUT("/profile", middleware.JWTAuthMiddleware(), controllers.UpdateProfile)
+		auth.GET("/api/me", middleware.JWTAuthMiddleware(), controllers.GetMe)
+
 	}
 }

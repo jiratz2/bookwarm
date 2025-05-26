@@ -90,7 +90,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	token, _ := utils.CreateToken(user.Email)
+	token, err := utils.CreateToken(user.ID, user.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
 		return
@@ -102,6 +102,43 @@ func Login(c *gin.Context) {
 		"profile_img_url": user.ProfilePic,
 	})
 }
+
+func GetMe(c *gin.Context) {
+	userIdRaw, exists := c.Get("userId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	userIdStr, ok := userIdRaw.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid userId type"})
+		return
+	}
+
+	// แปลง userId จาก string เป็น ObjectID
+	userId, err := primitive.ObjectIDFromHex(userIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid userId"})
+		return
+	}
+
+	var user models.User
+	collection := config.DB.Database("bookwarm").Collection("users")
+	err = collection.FindOne(context.TODO(), bson.M{"_id": userId}).Decode(&user)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":              user.ID.Hex(),
+		"displayname":     user.DisplayName,
+		"profile_img_url": user.ProfilePic,
+		"email":           user.Email,
+	})
+}
+
 
 func Profile(c *gin.Context) {
 	emailRaw, exists := c.Get("user")

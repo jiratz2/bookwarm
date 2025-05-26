@@ -12,8 +12,12 @@ import (
 
 func main() {
 	router := gin.Default()
+	
+	// ตั้งค่า Static File Server สำหรับโฟลเดอร์ uploads
+	router.Static("/uploads", "./uploads")
+	
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
@@ -24,8 +28,7 @@ func main() {
 		fmt.Printf("Error creating uploads directory: %v\n", err)
 	}
 
-	// ตั้งค่า Static File Server สำหรับโฟลเดอร์ uploads
-	router.Static("/uploads", "./uploads")
+	
 	
 	config.ConnectDB()
 	routes.AuthRoutes(router)

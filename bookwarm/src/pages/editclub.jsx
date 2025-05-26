@@ -3,8 +3,8 @@ import { ArrowLeft, Camera } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function CreateClub() {
-  const [clubName, setClubName] = useState("");
+function editclub() {
+ const [clubName, setClubName] = useState("");
   const [description, setDescription] = useState("");
   const [coverPhoto, setCoverPhoto] = useState(null);
   const [coverPhotoPreview, setCoverPhotoPreview] = useState(null);
@@ -23,7 +23,6 @@ export default function CreateClub() {
       return;
     }
 
-    // เพิ่มการเช็ครูปภาพให้สอดคล้องกับ backend
     if (!coverPhoto) {
       toast.error("Cover image is required");
       return;
@@ -40,18 +39,16 @@ export default function CreateClub() {
       const formData = new FormData();
       formData.append("name", clubName.trim());
       formData.append("description", description.trim());
-      formData.append("cover_image", coverPhoto); // ไม่เช็ค if เพราะเช็คไว้ข้างบนแล้ว
+      formData.append("cover_image", coverPhoto); 
 
       const res = await fetch("http://localhost:8080/api/club/", {
-        method: "POST",
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
-          // ไม่ต้องใส่ Content-Type เพราะ FormData จะจัดการเอง
         },
         body: formData,
       });
 
-      // เพิ่มการเช็ค response status อย่างละเอียด
       if (!res.ok) {
         const errorData = await res
           .json()
@@ -69,7 +66,6 @@ export default function CreateClub() {
     } catch (error) {
       console.error("Create club error:", error);
 
-      // แสดง error message ที่ชัดเจนขึ้น
       if (error.name === "TypeError" && error.message.includes("fetch")) {
         toast.error(
           "Cannot connect to server. Please check if the server is running."
@@ -211,3 +207,5 @@ export default function CreateClub() {
     </div>
   );
 }
+
+export default editclub
