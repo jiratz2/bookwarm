@@ -26,7 +26,7 @@ const Book = ({ title, author, description, tags, image, bookId }) => {
   );
 };
 
-const BookList = ({ filters }) => {
+const BookList = ({ filters, searchTerm }) => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +38,7 @@ const BookList = ({ filters }) => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setBooks(data);
+        setBooks(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Failed to fetch books:", error);
       } finally {
@@ -52,11 +52,18 @@ const BookList = ({ filters }) => {
   const filteredBooks = books.filter((book) => {
     const matchesTags =
       filters.tags.length === 0 ||
-      filters.tags.some((tag) => book.tags.some((t) => t._id === tag));
+      filters.tags.some((tag) => book.tags?.some((t) => t._id === tag));
+
     const matchesCategories =
       filters.categories.length === 0 ||
-      filters.categories.includes(book.category[0]._id);
-    return matchesTags && matchesCategories;
+      filters.categories.includes(book.category?.[0]?._id);
+
+    const matchesSearch =
+      !searchTerm ||
+      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.author?.[0]?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesTags && matchesCategories && matchesSearch;
   });
 
   if (loading) {
@@ -73,14 +80,15 @@ const BookList = ({ filters }) => {
             key={book._id}
             bookId={book._id}
             title={book.title}
-            author={book.author[0]?.name || "Unknown Author"}
+            author={book.author?.[0]?.name || "Unknown Author"}
             tags={book.tags || []}
-            image={book.coverImage || "https://via.placeholder.com/150"} // <--- ถูกแล้ว แต่ขึ้นอยู่กับหลังบ้านส่งอะไรมา
+            image={book.coverImage || "https://via.placeholder.com/150"}
           />
         ))
       )}
     </div>
   );
 };
+
 
 export default BookList;

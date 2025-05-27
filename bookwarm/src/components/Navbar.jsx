@@ -32,7 +32,6 @@ const NavBar = () => {
         BookWarm
       </Link>
       <nav className="text-xl md:text-base flex gap-11 items-center max-sm:hidden">
-        <SearchBar />
         <a href="/" className="font-bold text-black hover:text-blue-800">
           Home
         </a>

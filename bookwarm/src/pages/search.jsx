@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SearchPage() {
+  const router = useRouter();
   const [type, setType] = useState("Clubs");
   const [dropdown, setDropdown] = useState(false);
   const [query, setQuery] = useState("");
@@ -24,9 +26,9 @@ export default function SearchPage() {
 
   // ดึงข้อมูลหนังสือจาก API เมื่อเลือก Books
   useEffect(() => {
-    if (type === "Books") {
+    if (type === "Books" && query) {
       setLoading(true);
-      fetch("http://localhost:8080/api/books/")
+      fetch(`http://localhost:8080/api/books/search?q=${query}`)
         .then((res) => res.json())
         .then((data) => {
           setBooks(data);
@@ -34,7 +36,20 @@ export default function SearchPage() {
         })
         .catch(() => setLoading(false));
     }
-  }, [type]);
+  }, [query, type]);
+
+  // useEffect(() => {
+  //   if (type === "Books") {
+  //     setLoading(true);
+  //     fetch("http://localhost:8080/api/books/")
+  //       .then((res) => res.json())
+  //       .then((data) => {
+  //         setBooks(data);
+  //         setLoading(false);
+  //       })
+  //       .catch(() => setLoading(false));
+  //   }
+  // }, [type]);
 
   // เลือก data ตาม type
   const data =
@@ -128,15 +143,16 @@ export default function SearchPage() {
       {/* Results */}
       <div>
         {type === "Books" && loading ? (
-          <div>Loading...</div>
+          <div className="flex justify-center">Loading...</div>
         ) : filtered.length === 0 ? (
-          <div>No results found.</div>
+          <div className="flex justify-center">No results found.</div>
         ) : (
           filtered.map((item) =>
             type === "Clubs" ? (
               <div
                 key={item.id}
                 className="flex items-center gap-6 mb-9 border-b border-gray-200 pb-6"
+                onClick={() => router.push(`/club/${item.id}`)}
               >
                 <img
                   src={item.image}
@@ -144,7 +160,8 @@ export default function SearchPage() {
                   className="w-24 h-24 rounded-lg object-cover" // ปรับขนาดรูป
                 />
                 <div>
-                  <div className="font-bold text-2xl">{item.name}</div> {/* ปรับขนาดชื่อ */}
+                  <div className="font-bold text-2xl">{item.name}</div>{" "}
+                  {/* ปรับขนาดชื่อ */}
                   <div className="text-gray-700 text-lg">
                     {item.members} members
                   </div>
@@ -157,6 +174,7 @@ export default function SearchPage() {
               <div
                 key={item.id}
                 className="flex items-center gap-6 mb-9 border-b border-gray-200 pb-6"
+                onClick={() => router.push(`/bookProfile/${item.id}`)}
               >
                 <img
                   src={item.image}
@@ -164,8 +182,12 @@ export default function SearchPage() {
                   className="w-24 h-24 rounded-lg object-cover" // เพิ่มขนาดรูป
                 />
                 <div>
-                  <div className="font-bold text-2xl">{item.name}</div> {/* เพิ่มขนาดชื่อ */}
-                  <div className="text-gray-700 text-lg">by {item.author}</div> {/* เพิ่มขนาดผู้แต่ง */}
+                  <div className="font-bold text-2xl">{item.name}</div>{" "}
+                  {/* เพิ่มขนาดชื่อ */}
+                  <div className="text-gray-700 text-lg">
+                    by {item.author}
+                  </div>{" "}
+                  {/* เพิ่มขนาดผู้แต่ง */}
                   {/* แสดง rating */}
                   <div className="flex items-center gap-1 mt-1">
                     <span className="text-yellow-500 text-xl">

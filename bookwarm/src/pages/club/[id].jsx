@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Post from "../../components/Post"; // นำเข้า Post component
 
 const ClubProfile = () => {
   const router = useRouter();
@@ -18,6 +19,8 @@ const ClubProfile = () => {
   const [ownerName, setOwnerName] = useState("");
   const [members, setMembers] = useState([]);
   const [currentUserId, setCurrentUserId] = useState("");
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const fetchClubs = async () => {
     if (!id) return; // ต้องรอให้ id พร้อมก่อน
@@ -227,9 +230,22 @@ const ClubProfile = () => {
 
           <div className="flex justify-between">
             <div>club recommend</div>
-            <div>post</div>
-          </div>
+            <div className="mt-[100px] max-w-screen mx-auto bg-white min-h-screen">
+              <div className="px-32 py-10">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold">Posts</h2>
+                  <button
+                    onClick={() => setShowCreateForm(!showCreateForm)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    {showCreateForm ? "Cancel" : "Create Post"}
+                  </button>
+                </div>
 
+                <Post clubId={id} showCreateForm={showCreateForm} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

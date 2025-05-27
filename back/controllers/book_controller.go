@@ -272,6 +272,39 @@ func UpdateBook(c *gin.Context) {
 	c.JSON(http.StatusOK, results[0])
 }
 
+// GET /api/books/search?query=harry
+func SearchBooks(c *gin.Context) {
+    query := c.Query("query")
+    if query == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Query is required"})
+        return
+    }
+
+    collection := config.DB.Database("bookwarm").Collection("books")
+
+    filter := bson.M{
+        "title": bson.M{
+            "$regex":   query,
+            "$options": "i", // case-insensitive
+        },
+    }
+
+    cursor, err := collection.Find(context.TODO(), filter)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error finding books"})
+        return
+    }
+
+    var books []bson.M
+    if err := cursor.All(context.TODO(), &books); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding books"})
+        return
+    }
+
+    c.JSON(http.StatusOK, books)
+}
+
+
 func DeleteBook(c *gin.Context) {
 	idParam := c.Param("id")
 	bookID, err := primitive.ObjectIDFromHex(idParam)
