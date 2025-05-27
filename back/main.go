@@ -41,7 +41,7 @@ func main() {
 	routes.ReviewRoutes(router)
 	routes.MarkRoutes(router)
 	routes.ClubRoutes(router)
-	routes.PostRoutes(router)
+	// routes.PostRoutes(router)
 	routes.CommentRoutes(router)
 
 	router.Run(":8080")
