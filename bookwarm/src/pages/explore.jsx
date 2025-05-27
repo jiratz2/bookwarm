@@ -12,13 +12,13 @@ const Explore = () => {
 
   return (
     <div className="explore mt-[100px]">
-      <main className="explore-layout">
-        <aside className="explore-sidebar">
+      <main className="grid grid-cols-[300px_1fr] gap-4 p-4">
+        <aside className="p-6 rounded-xl shadow-md text-base transition-all duration-300 ease-in-out hover:shadow-lg hover:translate-y-[-2px]">
           <Filter setFilters={setFilters} />
         </aside>
-        <section className="">
-          <div className="">
-            <h2 className="font-bold text-2xl p-2">Recommend</h2>
+        <section className="bg-white p-4 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:translate-y-[-2px]">
+          <div>
+            <h2 className="font-bold text-2xl mb-4 p-2">Recommend</h2> 
             <div className="mb-4">
               <input
                 type="text"
@@ -29,7 +29,6 @@ const Explore = () => {
               />
             </div>
           </div>
-
           <BookList filters={filters} searchTerm={searchTerm} />
         </section>
       </main>

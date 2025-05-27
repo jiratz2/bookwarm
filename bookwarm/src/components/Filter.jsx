@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Filter = ({ setFilters }) => {
   const [selectedTags, setSelectedTags] = useState([]);
@@ -58,7 +58,7 @@ const Filter = ({ setFilters }) => {
       : [...selectedGenres, genreId];
     setSelectedGenres(updatedGenres);
     setFilters({ tags: selectedTags, categories: selectedCategories, genres: updatedGenres });
-  };
+};
 
   const resetFilters = () => {
     setSelectedTags([]);
@@ -68,55 +68,67 @@ const Filter = ({ setFilters }) => {
   };
 
   return (
-    <div className="filter">
-      <div className="filter-header">
-        <h3>Filter</h3>
-        <button className="reset-button" onClick={resetFilters}>
+    <div className="filter p-4 space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-2xl font-bold">Filter</h3>
+        <button
+          className="px-4 py-1 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 transition"
+          onClick={resetFilters}
+        >
           Reset
         </button>
       </div>
+
       <div className="filter-section">
-        <h4>Category</h4>
-        <ul className="categories">
+        <h4 className="font-semibold mb-2">Category</h4>
+        <ul className="space-y-1">
           {categories.map((category) => (
-            <li key={category._id}>
-              <label>
+            <li key={category.ID}>
+              <label className="inline-flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={selectedCategories.includes(category._id)}
-                  onChange={() => handleCategoryClick(category._id)}
+                  checked={selectedCategories.includes(category.ID)}
+                  onChange={() => handleCategoryClick(category.ID)}
+                  className="accent-blue-600"
                 />
-                {category.name}
+                <span>{category.Name}</span>
               </label>
             </li>
           ))}
         </ul>
       </div>
+
       <div className="filter-section">
-        <h4>Genre</h4>
-        <ul className="genres">
+        <h4 className="font-semibold mb-2">Genre</h4>
+        <ul className="space-y-1">
           {genres.map((genre) => (
-            <li key={genre._id}>
-              <label>
+            <li key={genre.id}>
+              <label className="inline-flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={selectedGenres.includes(genre._id)}
-                  onChange={() => handleGenreClick(genre._id)}
+                  checked={selectedGenres.includes(genre.id)}
+                  onChange={() => handleGenreClick(genre.id)} 
+                  className="accent-blue-600"
                 />
-                {genre.name}
+                <span>{genre.name}</span>
               </label>
             </li>
           ))}
         </ul>
       </div>
+
       <div className="filter-section">
-        <h4>Tag</h4>
-        <div className="tags">
+        <h4 className="font-semibold mb-2">Tag</h4>
+        <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
             <button
-              key={tag._id}
-              className={`tag-button ${selectedTags.includes(tag._id) ? 'active' : ''}`}
-              onClick={() => handleTagClick(tag._id)}
+              key={tag.id}
+              className={`px-3 py-1 text-sm rounded-full border ${
+                selectedTags.includes(tag.id)
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-blue-100'
+              }`}
+              onClick={() => handleTagClick(tag.id)}
             >
               {tag.name}
             </button>
