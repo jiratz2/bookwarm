@@ -12,7 +12,7 @@ const Explore = () => {
 
   return (
     <div className="explore mt-[100px]">
-      <main className="grid grid-cols-[300px_1fr] gap-4 p-4">
+      <main className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 p-4">
         <aside className="p-6 rounded-xl shadow-md text-base transition-all duration-300 ease-in-out hover:shadow-lg hover:translate-y-[-2px]">
           <Filter setFilters={setFilters} />
         </aside>

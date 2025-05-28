@@ -9,12 +9,12 @@ const Book = ({ title, author, description, tags, image, bookId }) => {
     setIsDropdownOpen((prev) => !prev);
   };
   return (
-    <div className="flex justify-between items-start gap-6 border border-gray-200 p-8 rounded-xl bg-white transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300">
+    <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border border-gray-200 p-8 rounded-xl bg-white transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300">
       <Link href={`/bookProfile/${bookId}`} className="flex gap-6 no-underline text-inherit flex-1">
         <img
           src={image || "https://placehold.co/150x225/e5e7eb/374151?text=No+Image"}
           alt={title}
-          className="w-[150px] h-[225px] object-cover rounded-lg"
+          className="w-[120px] h-[180px] sm:w-[150px] sm:h-[225px] object-cover rounded-lg"
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = "https://placehold.co/150x225/e5e7eb/374151?text=No+Image";
@@ -115,7 +115,7 @@ const BookList = ({ filters, searchTerm }) => {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4">
+    <div className="flex flex-col gap-6 p-2 sm:p-4">
       {filteredBooks.length === 0 ? (
         <p className="col-span-full text-center text-lg text-gray-600 mt-8">No books found matching your criteria.</p>
       ) : (
