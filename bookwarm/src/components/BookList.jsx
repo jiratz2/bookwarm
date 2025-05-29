@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
-const Book = ({ title, author, description, tags, image, bookId }) => {
+const Book = ({ title, author,categories,genres, tags, image, bookId }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const toggleDropdown = (e) => {
@@ -9,12 +9,12 @@ const Book = ({ title, author, description, tags, image, bookId }) => {
     setIsDropdownOpen((prev) => !prev);
   };
   return (
-    <div className="flex justify-between items-start gap-6 border border-gray-200 p-8 rounded-xl bg-white transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300">
+    <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border border-gray-200 p-8 rounded-xl bg-white transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300">
       <Link href={`/bookProfile/${bookId}`} className="flex gap-6 no-underline text-inherit flex-1">
         <img
           src={image || "https://placehold.co/150x225/e5e7eb/374151?text=No+Image"}
           alt={title}
-          className="w-[150px] h-[225px] object-cover rounded-lg"
+          className="w-[120px] h-[180px] sm:w-[150px] sm:h-[225px] object-cover rounded-lg"
           onError={(e) => {
             e.target.onerror = null;
             e.target.src = "https://placehold.co/150x225/e5e7eb/374151?text=No+Image";
@@ -23,10 +23,23 @@ const Book = ({ title, author, description, tags, image, bookId }) => {
         <div className="flex-1">
           <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
           <p className="text-base text-gray-600">{author}</p>
-          {description && <p className="text-base text-gray-600 mt-1">{description}</p>}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {categories.map((category, index) => (
+              <span key={index} className="bg-blue-200 text-gray-700 px-3 py-1.5 rounded-xl text-sm">
+                {category.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {genres.map((genre, index) => (
+              <span key={index} className="bg-red-200 text-gray-700 px-3 py-1.5 rounded-xl text-sm">
+                {genre.name}
+              </span> 
+            ))}
+          </div>
           <div className="flex flex-wrap gap-2 mt-3">
             {tags.map((tag, index) => (
-              <span key={index} className="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-xl text-sm">
+              <span key={index} className="bg-green-200 text-gray-700 px-3 py-1.5 rounded-xl text-sm">
                 {tag.name}
               </span>
             ))}
@@ -115,7 +128,7 @@ const BookList = ({ filters, searchTerm }) => {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4">
+    <div className="flex flex-col gap-6 p-2 sm:p-4">
       {filteredBooks.length === 0 ? (
         <p className="col-span-full text-center text-lg text-gray-600 mt-8">No books found matching your criteria.</p>
       ) : (
@@ -125,6 +138,8 @@ const BookList = ({ filters, searchTerm }) => {
             bookId={book._id}
             title={book.title}
             author={book.author?.[0]?.name || "Unknown Author"}
+            genres={book.genres || []}
+            categories={book.category || []}
             tags={book.tags || []}
             image={book.coverImage}
           />

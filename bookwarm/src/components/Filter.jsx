@@ -68,7 +68,7 @@ const Filter = ({ setFilters }) => {
   };
 
   return (
-    <div className="filter p-4 space-y-4">
+    <div className="filter p-4 space-y-4 text-sm sm:text-base">
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold">Filter</h3>
         <button

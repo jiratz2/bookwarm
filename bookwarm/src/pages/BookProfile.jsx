@@ -42,11 +42,11 @@ const bookprofile = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto mt-20">
       {/* ส่วนหัว */}
-      <div className="flex gap-6">
+      <div className="flex flex-col sm:flex-row gap-6">
         <img
           src={book.coverImage || "https://via.placeholder.com/150"}
           alt={book.title}
-          className="w-48 h-72 object-cover rounded-md"
+          className="w-40 h-60 sm:w-48 sm:h-72 object-cover rounded-md mx-auto sm:mx-0"
         />
         <div>
           <h1 className="text-2xl font-bold">{book.title}</h1>
@@ -127,14 +127,14 @@ const bookprofile = () => {
           </div>
           <div className="mt-4">
             <textarea
-              className="w-full border rounded-md p-2"
+              className="w-full border rounded-md p-2 text-sm sm:text-base"
               placeholder="Write something..."
               value={review}
               onChange={(e) => setReview(e.target.value)}
             />
           </div>
           <button
-            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition mt-4"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition mt-4 w-full sm:w-auto"
             onClick={handleSubmitReview}
           >
             Send
