@@ -12,5 +12,6 @@ func ReplyRoutes(router *gin.Engine) {
 		reply.POST("/post/:postId/reply", middleware.JWTAuthMiddleware(), controllers.CreateReply)
 		reply.GET("/post/:postId/replies", controllers.GetRepliesByPost)
 		reply.PUT("/:replyId/like", middleware.JWTAuthMiddleware(), controllers.LikeReply)
+		reply.DELETE("/:replyId", middleware.JWTAuthMiddleware(), controllers.DeleteReply)
 	}
 }

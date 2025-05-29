@@ -162,3 +162,41 @@ func LikeReply(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": msg})
 }
+
+// Delete Reply
+func DeleteReply(c *gin.Context) {
+	replyIDHex := c.Param("replyId")
+	replyID, err := primitive.ObjectIDFromHex(replyIDHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reply ID"})
+		return
+	}
+
+	userIDStr := c.MustGet("userId").(string)
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	collection := config.DB.Database("bookwarm").Collection("replies")
+	var reply models.Reply
+	err = collection.FindOne(context.TODO(), bson.M{"_id": replyID}).Decode(&reply)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Reply not found"})
+		return
+	}
+
+	if reply.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not the owner of this reply"})
+		return
+	}
+
+	_, err = collection.DeleteOne(context.TODO(), bson.M{"_id": replyID})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting reply"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Reply deleted successfully"})
+}

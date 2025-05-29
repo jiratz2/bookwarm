@@ -234,10 +234,10 @@ const Post = ({ clubId }) => {
   const isPostOwner = (post) => {
     const token = localStorage.getItem("token");
     if (!token) return false;
-    
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId === post.user_id;
+      console.log("token id:", payload.id, "post.user_id:", post.user_id);
+      return payload.id === post.user_id;
     } catch {
       return false;
     }
@@ -268,6 +268,48 @@ const Post = ({ clubId }) => {
         }
       </div>
     );
+  };
+
+  // ตรวจสอบว่าผู้ใช้เป็นเจ้าของ reply หรือไม่
+  const isReplyOwner = (reply) => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log("token id:", payload.id, "reply.user_id:", reply.user_id);
+      return payload.id === reply.user_id;
+    } catch {
+      return false;
+    }
+  };
+
+  // ลบ reply
+  const handleDeleteReply = async (replyId, postId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please log in to delete replies");
+      return;
+    }
+    if (!window.confirm("Are you sure you want to delete this reply?")) {
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:8080/api/reply/${replyId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("Reply deleted successfully");
+        fetchReplies(postId);
+      } else {
+        toast.error(data.error || "Failed to delete reply");
+      }
+    } catch (err) {
+      toast.error("Network error");
+    }
   };
 
   // Loading state
@@ -484,13 +526,23 @@ const Post = ({ clubId }) => {
                 </div>
                 {/* ปุ่มไลก์ */}
                 <button
-                  className={`ml-2 text-lg ${reply.likes && localStorage.getItem("token") && reply.likes.some(id => id === JSON.parse(atob(localStorage.getItem("token").split('.')[1])).userId) ? "text-red-500" : "text-gray-500 hover:text-red-500"}`}
+                  className={`ml-2 text-lg ${reply.likes && localStorage.getItem("token") && reply.likes.some(id => id === JSON.parse(atob(localStorage.getItem("token").split('.')[1])).id) ? "text-red-500" : "text-gray-500 hover:text-red-500"}`}
                   onClick={() => handleLikeReply(reply._id, post._id)}
                   disabled={!localStorage.getItem("token")}
                   title={localStorage.getItem("token") ? "Like/Unlike" : "Please log in to like"}
                 >
                   ❤️ <span className="text-base">{reply.likes ? reply.likes.length : 0}</span>
                 </button>
+                {/* ปุ่มลบ reply เฉพาะเจ้าของ */}
+                {isReplyOwner(reply) && (
+                  <button
+                    className="ml-2 text-red-500 hover:text-red-700 text-lg p-1 rounded hover:bg-red-50 transition-colors"
+                    onClick={() => handleDeleteReply(reply._id, post._id)}
+                    title="Delete reply"
+                  >
+                    🗑️
+                  </button>
+                )}
               </div>
             );
           })}
