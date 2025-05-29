@@ -65,8 +65,18 @@ const BookProfilePage = () => {
           <h1 className="text-2xl font-bold">{book.title}</h1>
           <p className="text-gray-600">By {book.author?.[0]?.name || "Unknown Author"}</p>
           <p className="text-gray-600">First publish {book.publishYear || "-"}</p>
-          <p className="text-gray-600">{book.pages || "-"} pages</p>
-          <p className="text-gray-600">rating</p>
+          <p className="text-gray-600">{book.pageCount || "-"} pages</p>
+          <div className="mt-2 flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={`text-lg ${star <= book.rating ? 'text-yellow-500' : 'text-gray-300'}`}
+              >
+                ★
+              </span>
+            ))}
+            <span className="text-sm text-gray-600 ml-2">({book.rating.toFixed(1)})</span>
+          </div>
 
           {/* ปุ่ม Want to Read */}
           <div className="relative mt-4">
@@ -100,10 +110,30 @@ const BookProfilePage = () => {
 
           {/* แท็ก */}
           <div className="flex flex-wrap gap-2 mt-4">
+            {(book.category || []).map((category, index) => (
+              <span
+                key={index}
+                className="bg-blue-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+              >
+                {category.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(book.genres || []).map((genre, index) => (
+              <span
+                key={index}
+                className="bg-red-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+              >
+                {genre.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
             {(book.tags || []).map((tag, index) => (
               <span
                 key={index}
-                className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+                className="bg-green-200 text-gray-700 px-2 py-1 rounded-full text-xs"
               >
                 {tag.name}
               </span>
