@@ -16,7 +16,7 @@ const Explore = () => {
         <aside className="p-6 rounded-xl shadow-md text-base transition-all duration-300 ease-in-out hover:shadow-lg hover:translate-y-[-2px]">
           <Filter setFilters={setFilters} />
         </aside>
-        <section className="bg-white p-4 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:shadow-md hover:translate-y-[-2px]">
+        <section className="">
           <div>
             <h2 className="font-bold text-2xl mb-4 p-2">Recommend</h2> 
             <div className="mb-4">

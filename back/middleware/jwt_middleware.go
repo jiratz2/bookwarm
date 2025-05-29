@@ -49,7 +49,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		// ใส่ไว้ใน context
 		c.Set("user", email)
 		c.Set("userId", userID) // ← ✅ ใส่ userId ลง context
-
+		c.Set("displayName", claims["displayname"]) // ถ้ามี displayname ใน claims
 		c.Next()
 
 	}

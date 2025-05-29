@@ -19,18 +19,37 @@ func CreateMark(c *gin.Context) {
 		return
 	}
 
+	// 🔐 ดึง user จาก JWT
+	userRaw, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	email := userRaw.(string)
+
+	// 🔍 หา user จากอีเมล
+	var user models.User
+	userCollection := config.DB.Database("bookwarm").Collection("users")
+	err := userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
 	// ตรวจสอบสถานะว่าเป็นค่าที่ถูกต้องหรือไม่
 	if input.Status != "want to read" && input.Status != "now reading" && input.Status != "read" && input.Status != "did not finish" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})
 		return
 	}
 
+	// กำหนดค่า Mark
 	input.ID = primitive.NewObjectID()
+	input.UserID = user.ID
 	input.CreatedAt = time.Now()
 	input.UpdatedAt = time.Now()
 
 	collection := config.DB.Database("bookwarm").Collection("marks")
-	_, err := collection.InsertOne(context.TODO(), input)
+	_, err = collection.InsertOne(context.TODO(), input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create mark"})
 		return
@@ -42,21 +61,31 @@ func CreateMark(c *gin.Context) {
 	})
 }
 
+
 func GetMarksByUser(c *gin.Context) {
-	userIDParam := c.Param("user_id")
-	userID, err := primitive.ObjectIDFromHex(userIDParam)
+	// 🔐 ดึง user จาก JWT
+	userRaw, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	email := userRaw.(string)
+
+	var user models.User
+	userCollection := config.DB.Database("bookwarm").Collection("users")
+	err := userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UserID"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
+	// 🔍 หา marks ของ user
 	collection := config.DB.Database("bookwarm").Collection("marks")
-	cursor, err := collection.Find(context.TODO(), bson.M{"user_id": userID})
+	cursor, err := collection.Find(context.TODO(), bson.M{"user_id": user.ID})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch marks"})
 		return
 	}
-
 	defer cursor.Close(context.TODO())
 
 	var marks []models.Mark
@@ -72,6 +101,45 @@ func GetMarksByUser(c *gin.Context) {
 	c.JSON(http.StatusOK, marks)
 }
 
+
+func GetMarkByUserAndBook(c *gin.Context) {
+	bookIDParam := c.Param("book_id")
+
+	bookID, err := primitive.ObjectIDFromHex(bookIDParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid BookID"})
+		return
+	}
+
+	// 🔐 ดึง user จาก JWT
+	userRaw, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	email := userRaw.(string)
+
+	var user models.User
+	userCollection := config.DB.Database("bookwarm").Collection("users")
+	err = userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	collection := config.DB.Database("bookwarm").Collection("marks")
+	var mark models.Mark
+	err = collection.FindOne(context.TODO(), bson.M{"user_id": user.ID, "book_id": bookID}).Decode(&mark)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Mark not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, mark)
+}
+
+
+
 func UpdateMark(c *gin.Context) {
 	var input models.Mark
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -79,7 +147,6 @@ func UpdateMark(c *gin.Context) {
 		return
 	}
 
-	// ตรวจสอบสถานะว่าเป็นค่าที่ถูกต้องหรือไม่
 	if input.Status != "want to read" && input.Status != "now reading" && input.Status != "read" && input.Status != "did not finish" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})
 		return
@@ -92,7 +159,31 @@ func UpdateMark(c *gin.Context) {
 		return
 	}
 
+	// 🔐 ดึง user จาก JWT
+	userRaw, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	email := userRaw.(string)
+
+	var user models.User
+	userCollection := config.DB.Database("bookwarm").Collection("users")
+	err = userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	// ตรวจสอบว่า mark นี้เป็นของ user หรือไม่
 	collection := config.DB.Database("bookwarm").Collection("marks")
+	var existingMark models.Mark
+	err = collection.FindOne(context.TODO(), bson.M{"_id": markID}).Decode(&existingMark)
+	if err != nil || existingMark.UserID != user.ID {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not allowed to update this mark"})
+		return
+	}
+
 	_, err = collection.UpdateOne(
 		context.TODO(),
 		bson.M{"_id": markID},

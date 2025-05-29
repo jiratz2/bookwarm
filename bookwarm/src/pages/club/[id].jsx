@@ -242,7 +242,7 @@ const ClubProfile = () => {
                   </button>
                 </div>
 
-                <Post clubId={id} showCreateForm={showCreateForm} />
+                <Post clubId={id} />
               </div>
             </div>
           </div>

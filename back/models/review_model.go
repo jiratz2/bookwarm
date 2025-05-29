@@ -1,15 +1,17 @@
 package models
-
 import (
 	"time"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Review struct {
-	ID		primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	BookID	primitive.ObjectID `json:"book_id" bson:"book_id"`
-	UserID	primitive.ObjectID `json:"user_id" bson:"user_id"`
-	Rating	float64				`json:"rating" bson:"rating"`
-	TextReview	string			`json:"text_review" bson:"text_review"`
-	CreatedAt	time.Time		`json:"created_at,omitempty" bson:"created_at,omitempty"`
+    ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+    BookID       primitive.ObjectID `bson:"book_id" json:"book_id"`
+    Rating       int                `bson:"rating" json:"rating"`
+    Comment      string             `bson:"comment" json:"comment"`
+    ReviewerName string             `bson:"reviewer_name" json:"reviewer_name"`
+    ReviewProfilePic string             `bson:"review_profile_pic" json:"review_profile_pic"`
+    ReviewDate   time.Time          `bson:"review_date" json:"review_date"`
+    UpdatedAt time.Time `bson:"updated_at,omitempty" json:"updated_at,omitempty"`
+
 }
