@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
-const Book = ({ title, author, description, tags, image, bookId }) => {
+const Book = ({ title, author,categories,genres, tags, image, bookId }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const toggleDropdown = (e) => {
@@ -23,10 +23,23 @@ const Book = ({ title, author, description, tags, image, bookId }) => {
         <div className="flex-1">
           <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
           <p className="text-base text-gray-600">{author}</p>
-          {description && <p className="text-base text-gray-600 mt-1">{description}</p>}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {categories.map((category, index) => (
+              <span key={index} className="bg-blue-200 text-gray-700 px-3 py-1.5 rounded-xl text-sm">
+                {category.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {genres.map((genre, index) => (
+              <span key={index} className="bg-red-200 text-gray-700 px-3 py-1.5 rounded-xl text-sm">
+                {genre.name}
+              </span> 
+            ))}
+          </div>
           <div className="flex flex-wrap gap-2 mt-3">
             {tags.map((tag, index) => (
-              <span key={index} className="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-xl text-sm">
+              <span key={index} className="bg-green-200 text-gray-700 px-3 py-1.5 rounded-xl text-sm">
                 {tag.name}
               </span>
             ))}
@@ -125,6 +138,8 @@ const BookList = ({ filters, searchTerm }) => {
             bookId={book._id}
             title={book.title}
             author={book.author?.[0]?.name || "Unknown Author"}
+            genres={book.genres || []}
+            categories={book.category || []}
             tags={book.tags || []}
             image={book.coverImage}
           />
