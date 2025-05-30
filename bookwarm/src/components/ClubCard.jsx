@@ -65,7 +65,9 @@ function ClubCard({ club, className, clubId }) {
           <div className="flex items-center justify-between p-2 pt-0">
             <div className="flex items-center text-sm text-muted-foreground">
               <Users className="mr-1 h-3.5 w-3.5" />
-              {/* <span>{club.members.toLocaleString()} members</span> */}
+              {/* แก้ไขเพื่อแสดงจำนวนสมาชิกจริง */}
+              {/* ตรวจสอบและแสดงจำนวนสมาชิก หรือ 0 ถ้าไม่มี */} 
+              <span>{(club.members ?? []).length} members</span>
             </div>
           </div>
         </div>

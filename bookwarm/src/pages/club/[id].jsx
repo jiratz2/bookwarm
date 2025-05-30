@@ -221,6 +221,10 @@ const ClubProfile = () => {
                 </p>
                 <p className="text-gray-500 mt-2 text-sm">
                   Owned by <span className="font-semibold">{ownerName}</span>
+                  {/* Display member count */}
+                  {members && Array.isArray(members) && (
+                    <span className="ml-4">{members.length} members</span>
+                  )}
                 </p>
               </div>
               <div>
