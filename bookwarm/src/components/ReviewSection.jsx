@@ -106,12 +106,13 @@ const ReviewSection = ({ bookId }) => {
           rating,
           comment: review,
         }),
-});
+      });
 
       console.log("Submitting review:", {
-  book_id: bookId,
-  rating,
-  comment: review,});
+        book_id: bookId,
+        rating,
+        comment: review,
+      });
 
       const data = await res.json();
 
@@ -197,6 +198,79 @@ const ReviewSection = ({ bookId }) => {
   // ตรวจสอบว่า user ล็อกอินหรือไม่
   const isLoggedIn = Boolean(localStorage.getItem("token") && currentUser);
 
+  // ฟังก์ชันช่วยแยก myReview ออกจาก reviews
+  const getSortedReviews = () => {
+    if (!currentUser) return reviews;
+    const myReview = reviews.find(r => r.reviewer_name === currentUser);
+    const others = reviews.filter(r => r.reviewer_name !== currentUser);
+    return myReview ? [myReview, ...others] : others;
+  };
+
+  // State สำหรับแก้ไขรีวิว
+  const [editMode, setEditMode] = useState(false);
+  const [editRating, setEditRating] = useState(0);
+  const [editComment, setEditComment] = useState("");
+  const [editReviewId, setEditReviewId] = useState(null);
+
+  // ฟังก์ชันเริ่มแก้ไข
+  const startEditReview = (review) => {
+    setEditMode(true);
+    setEditRating(review.rating);
+    setEditComment(review.comment);
+    setEditReviewId(review.id);
+  };
+
+  // ฟังก์ชันยกเลิกแก้ไข
+  const cancelEdit = () => {
+    setEditMode(false);
+    setEditRating(0);
+    setEditComment("");
+    setEditReviewId(null);
+  };
+
+  // ฟังก์ชัน submit แก้ไขรีวิว
+  const handleUpdateReview = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login to update review");
+      return;
+    }
+    if (editComment.trim() === "" || editRating === 0) {
+      toast.error("Please provide both rating and comment");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8080/api/reviews/${editReviewId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating: editRating, comment: editComment }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Update failed");
+        return;
+      }
+      // อัปเดตรีวิวใน state
+      setReviews(reviews => reviews.map(r => r.id === editReviewId ? { ...r, rating: editRating, comment: editComment } : r));
+      setAverage(
+        (() => {
+          const newReviews = reviews.map(r => r.id === editReviewId ? { ...r, rating: editRating } : r);
+          return newReviews.reduce((sum, r) => sum + r.rating, 0) / newReviews.length;
+        })()
+      );
+      cancelEdit();
+      toast.success("Review updated successfully");
+    } catch (err) {
+      toast.error(err.message || "Error updating review");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="mt-6">
       <h2 className="text-lg font-bold">
@@ -204,7 +278,7 @@ const ReviewSection = ({ bookId }) => {
       </h2>
 
       {/* Review Form */}
-      {isLoggedIn ? (
+      {isLoggedIn && !hasReviewed && !editMode ? (
         <div className="border p-4 rounded-md mt-4">
           <div className="flex items-center gap-4">
             <span className="text-gray-600">Rate this book:</span>
@@ -245,9 +319,51 @@ const ReviewSection = ({ bookId }) => {
             {loading ? "Submitting..." : "Submit Review"}
           </button>
         </div>
-      ) : (
-        <div className="border p-4 rounded-md mt-4 text-center text-gray-500">
-          <p>Please login to submit a review</p>
+      ) : null}
+      {/* Edit Review Form */}
+      {isLoggedIn && hasReviewed && editMode && (
+        <div className="border p-4 rounded-md mt-4">
+          <div className="flex items-center gap-4">
+            <span className="text-gray-600">Edit your rating:</span>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={`cursor-pointer text-2xl ${star <= editRating ? "text-yellow-500" : "text-gray-300"} hover:text-yellow-400 transition-colors`}
+                onClick={() => setEditRating(star)}
+              >
+                ★
+              </span>
+            ))}
+            {editRating > 0 && (
+              <span className="text-sm text-gray-500">({editRating} star{editRating > 1 ? "s" : ""})</span>
+            )}
+          </div>
+          <div className="mt-4">
+            <textarea
+              className="w-full border rounded-md p-2 resize-none"
+              placeholder="Edit your review..."
+              value={editComment}
+              onChange={e => setEditComment(e.target.value)}
+              rows={4}
+              disabled={loading}
+            />
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              className={`${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"} text-white px-4 py-2 rounded-md text-sm transition disabled:cursor-not-allowed`}
+              onClick={handleUpdateReview}
+              disabled={loading || editRating === 0 || !editComment.trim()}
+            >
+              {loading ? "Updating..." : "Update Review"}
+            </button>
+            <button
+              className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm transition"
+              onClick={cancelEdit}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
@@ -255,21 +371,19 @@ const ReviewSection = ({ bookId }) => {
       <div className="mt-6">
         <h2 className="text-lg font-bold">All Reviews ({reviews.length})</h2>
 
-        {reviews.length === 0 ? (
+        {getSortedReviews().length === 0 ? (
           <p className="text-gray-500 mt-4">
             No reviews yet. Be the first to review!
           </p>
         ) : (
           <div className="space-y-4 mt-4">
-            {reviews.map((r) => (
+            {getSortedReviews().map((r) => (
               <div key={r.id} className="border-b pb-4 last:border-b-0">
                 <div className="flex items-center gap-2 mb-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <span
                       key={star}
-                      className={`text-xl ${
-                        star <= r.rating ? "text-yellow-500" : "text-gray-300"
-                      }`}
+                      className={`text-xl ${star <= r.rating ? "text-yellow-500" : "text-gray-300"}`}
                     >
                       ★
                     </span>
@@ -281,27 +395,38 @@ const ReviewSection = ({ bookId }) => {
 
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    {/* เพิ่มรูปโปรไฟล์ */}
-                    {r.review_profile_pic && (
+                    {/* รูปโปรไฟล์ */}
+                    {r.review_profile_pic ? (
                       <img
                         src={r.review_profile_pic}
                         alt="profile"
-                        className="w-8 h-8 rounded-full object-cover"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
                       />
+                    ) : (
+                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white font-semibold text-base shadow-md">
+                        {r.reviewer_name ? r.reviewer_name.charAt(0).toUpperCase() : "U"}
+                      </div>
                     )}
                     <p className="text-gray-600">
-                      <strong>{r.reviewer_name}</strong> —{" "}
-                      {new Date(r.review_date).toLocaleDateString()}
+                      <strong>{r.reviewer_name}</strong> — {new Date(r.review_date).toLocaleDateString()}
                     </p>
                   </div>
-
-                  {currentUser === r.reviewer_name && (
-                    <button
-                      className="text-red-500 text-sm hover:text-red-700 transition-colors"
-                      onClick={() => handleDeleteReview(r.id)}
-                    >
-                      Delete
-                    </button>
+                  {/* ปุ่มลบ/แก้ไข */}
+                  {isLoggedIn && currentUser === r.reviewer_name && !editMode && (
+                    <div className="flex gap-2">
+                      <button
+                        className="text-blue-500 text-sm hover:text-blue-700 transition-colors"
+                        onClick={() => startEditReview(r)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-red-500 text-sm hover:text-red-700 transition-colors"
+                        onClick={() => handleDeleteReview(r.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </div>
 

@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Post from "../../components/Post"; // นำเข้า Post component
+import Post from "../../components/Post";
+import CreatePostForm from "../../components/CreatePostForm";
 
 const ClubProfile = () => {
   const router = useRouter();
@@ -241,6 +242,21 @@ const ClubProfile = () => {
                     {showCreateForm ? "Cancel" : "Create Post"}
                   </button>
                 </div>
+
+                {showCreateForm && (
+                  <div className="mb-6">
+                    <CreatePostForm 
+                      clubId={id} 
+                      onPostCreated={() => {
+                        setShowCreateForm(false);
+                        // Refresh posts
+                        if (typeof window !== 'undefined') {
+                          window.location.reload();
+                        }
+                      }} 
+                    />
+                  </div>
+                )}
 
                 <Post clubId={id} />
               </div>
