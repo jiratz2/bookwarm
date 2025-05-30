@@ -13,6 +13,7 @@ const BookProfilePage = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [averageRating, setAverageRating] = useState(0);
 
   // ตรวจสอบ token
   useEffect(() => {
@@ -53,6 +54,11 @@ const BookProfilePage = () => {
 
     fetchBook();
   }, [id]);
+
+  // ฟังก์ชันสำหรับอัปเดตค่าเฉลี่ยเรตติ้ง
+  const handleAverageRatingUpdate = (newAverage) => {
+    setAverageRating(newAverage);
+  };
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
@@ -126,26 +132,18 @@ const BookProfilePage = () => {
         />
 
         <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-2">{book.title}</h1>
-          <p className="text-xl text-gray-600 mb-1">
+          <h1 className="text-3xl font-bold">{book.title}</h1>
+          <p className="text-xl text-gray-600 mb-1 font-bold">
             By {book.author?.[0]?.name || "Unknown Author"}
           </p>
           
-          <div className="text-gray-600 space-y-1 mb-4">
+          <div className="text-gray-600">
             <p>First published: {book.publishYear || "Unknown"}</p>
-            <p>Pages: {book.pages || "Unknown"}</p>
+            <p>Pages: {book.pageCount || "Unknown"}</p>
           </div>
 
-          <div className="mt-2 flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <span
-                key={star}
-                className={`text-lg ${star <= book.rating ? 'text-yellow-500' : 'text-gray-300'}`}
-              >
-                ★
-              </span>
-            ))}
-            <span className="text-sm text-gray-600 ml-2">({book.rating.toFixed(1)})</span>
+          <div className="flex items-center gap-1">
+            <span className="text-gray-600">Rating: {averageRating.toFixed(1)}</span>
           </div>
 
           <MarkButton bookId={id} user={currentUser}/>
@@ -161,7 +159,7 @@ const BookProfilePage = () => {
               </span>
             ))}
           </div>
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-2">
             {(book.genres || []).map((genre, index) => (
               <span
                 key={index}
@@ -171,7 +169,7 @@ const BookProfilePage = () => {
               </span>
             ))}
           </div>
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-2">
             {(book.tags || []).map((tag, index) => (
               <span
                 key={index}
@@ -196,7 +194,7 @@ const BookProfilePage = () => {
 
       {/* รีวิวส่วน */}
       <div className="border-t pt-8">
-        <ReviewSection bookId={id} user={currentUser}/>
+        <ReviewSection bookId={id} user={currentUser} onAverageRatingUpdate={handleAverageRatingUpdate}/>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import MarkButton from "./MarkButton";
 
 const Book = ({ title, author,categories,genres, tags, image, bookId }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -47,33 +48,7 @@ const Book = ({ title, author,categories,genres, tags, image, bookId }) => {
         </div>
       </Link>
       <div className="relative mt-4">
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition flex items-center"
-          onClick={toggleDropdown}
-        >
-          Want to Read
-          <span className="ml-2">▼</span>
-        </button>
-        {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-blue-600 text-white border border-blue-700 rounded-md shadow-lg z-10">
-            <ul className="py-2">
-              <li className="px-4 py-2 font-bold">Mark as</li>
-              <li className="pl-6 pr-4 py-2 hover:bg-blue-700 cursor-pointer">
-                Want to Read
-              </li>
-              <li className="pl-6 pr-4 py-2 hover:bg-blue-700 cursor-pointer">
-                Now Reading
-              </li>
-              <li className="pl-6 pr-4 py-2 hover:bg-blue-700 cursor-pointer">
-                Read
-              </li>
-              <li className="pl-6 pr-4 py-2 hover:bg-blue-700 cursor-pointer">
-                Did Not Finish
-              </li>
-              <li className="px-4 py-2 font-bold hover:bg-blue-700 cursor-pointer">Write review</li>
-            </ul>
-          </div>
-        )}
+        <MarkButton bookId={bookId} />
       </div>
     </div>
   );

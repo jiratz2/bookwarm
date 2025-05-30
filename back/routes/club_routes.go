@@ -17,5 +17,6 @@ func ClubRoutes(router *gin.Engine){
 		club.Use(middleware.JWTAuthMiddleware()).POST("/:id/leave", controllers.LeaveClub)
 		club.Use(middleware.JWTAuthMiddleware()).PUT("/:id", controllers.UpdateClub)
 		club.Use(middleware.JWTAuthMiddleware()).DELETE("/:id", controllers.DeleteClub)
+		club.Use(middleware.JWTAuthMiddleware()).GET("/user", controllers.GetClubsByUser)
 	}
 }

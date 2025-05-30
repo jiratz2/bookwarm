@@ -13,6 +13,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"log"
 )
 
 // CreateClub สร้าง Club ใหม่
@@ -332,4 +334,57 @@ func DeleteClub(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Club deleted successfully"})
+}
+
+// GetClubsByUser ดึง Club ที่ผู้ใช้เป็นสมาชิกหรือเป็นเจ้าของ
+func GetClubsByUser(c *gin.Context) {
+	log.Println("Attempting to fetch clubs for user...") // Log start
+	// 🔐 ดึง user ID จาก context ที่ middleware ใส่ไว้
+	userIDRaw, exists := c.Get("userId")
+	log.Printf("UserID from context: %v, exists: %v\n", userIDRaw, exists) // Log context value
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
+		log.Println("User ID not found in context. Aborting.") // Log absence
+		return
+	}
+
+	userIDStr := userIDRaw.(string)
+	log.Printf("Attempting to convert UserID string to ObjectID: %s\n", userIDStr) // Log string value
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid User ID format in context"})
+		log.Printf("Error converting UserID to ObjectID: %v\n", err) // Log conversion error
+		return
+	}
+
+	log.Printf("Successfully converted UserID to ObjectID: %s\n", userID.Hex()) // Log success
+	clubCollection := config.DB.Database("bookwarm").Collection("clubs")
+
+	// หา clubs ที่ user เป็นเจ้าของหรือเป็นสมาชิก
+	filter := bson.M{
+		"$or": []bson.M{
+			{"owner_id": userID},
+			{"members": userID},
+		},
+	}
+	log.Printf("Fetching clubs with filter: %+v\n", filter) // Log filter
+
+	cursor, err := clubCollection.Find(context.TODO(), filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user's clubs from DB"})
+		log.Printf("Database query error: %v\n", err) // Log DB error
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var clubs []models.Club
+	if err := cursor.All(context.TODO(), &clubs); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode user's clubs from DB"})
+		log.Printf("Database decoding error: %v\n", err) // Log decode error
+		return
+	}
+
+	log.Printf("Successfully fetched %d clubs\n", len(clubs)) // Log success count
+	c.JSON(http.StatusOK, clubs)
 }

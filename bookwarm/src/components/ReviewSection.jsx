@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import toast from "react-hot-toast";
 
-const ReviewSection = ({ bookId }) => {
+const ReviewSection = ({ bookId, onAverageRatingUpdate }) => {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [reviews, setReviews] = useState([]);
@@ -58,7 +58,9 @@ const ReviewSection = ({ bookId }) => {
         );
         
         setReviews(uniqueReviews);
-        setAverage(data.average_rating || 0);
+        const newAverage = data.average_rating || 0;
+        setAverage(newAverage);
+        onAverageRatingUpdate?.(newAverage);
 
         // แยกรีวิวของผู้ใช้และรีวิวของคนอื่น
         const token = localStorage.getItem("token");
@@ -108,7 +110,7 @@ const ReviewSection = ({ bookId }) => {
     };
 
     fetchReviews();
-  }, [bookId]);
+  }, [bookId, onAverageRatingUpdate]);
 
   // เพิ่ม useEffect เพื่อ reset hasReviewed เมื่อ bookId เปลี่ยน
   useEffect(() => {
@@ -180,6 +182,7 @@ const ReviewSection = ({ bookId }) => {
         const newAverage =
           newReviews.reduce((sum, r) => sum + r.rating, 0) / newReviews.length;
         setAverage(newAverage);
+        onAverageRatingUpdate?.(newAverage);
       }
 
       setRating(0);
@@ -245,8 +248,10 @@ const ReviewSection = ({ bookId }) => {
         const newAverage =
           updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length;
         setAverage(newAverage);
+        onAverageRatingUpdate?.(newAverage);
       } else {
         setAverage(0);
+        onAverageRatingUpdate?.(0);
       }
 
       toast.success("Review deleted successfully");
@@ -315,16 +320,14 @@ const ReviewSection = ({ bookId }) => {
       }
       
       // อัปเดตรีวิวใน state โดยใช้ _id ในการค้นหา
-      setReviews(reviews => reviews.map(r => r._id === editReviewId ? { ...r, rating: editRating, comment: editComment, updated_at: new Date() } : r));
+      const updatedReviews = reviews.map(r => r._id === editReviewId ? { ...r, rating: editRating, comment: editComment, updated_at: new Date() } : r);
+      setReviews(updatedReviews);
       
       // Recalculate average
-      setAverage(
-        (() => {
-          const newReviews = reviews.map(r => r._id === editReviewId ? { ...r, rating: editRating } : r);
-          const totalRating = newReviews.reduce((sum, r) => sum + (r.rating || 0), 0);
-          return newReviews.length > 0 ? totalRating / newReviews.length : 0;
-        })()
-      );
+      const newAverage = updatedReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / updatedReviews.length;
+      setAverage(newAverage);
+      onAverageRatingUpdate?.(newAverage);
+
       cancelEdit();
       toast.success("Review updated successfully");
     } catch (err) {
@@ -357,7 +360,7 @@ const ReviewSection = ({ bookId }) => {
         <img
           src={getImageUrl(review.user_profile_pic)}
           alt={review.user_display_name || review.reviewer_name || "User"}
-          className="w-10 h-10 rounded-full object-cover border-2 border-blue-200"
+          className="w-15 h-15 mr-2 rounded-full object-cover border-2 border-blue-200"
           onError={(e) => {
             e.target.style.display = 'none';
             const nextDiv = e.target.nextElementSibling;
@@ -370,7 +373,7 @@ const ReviewSection = ({ bookId }) => {
     }
     
     return (
-      <div className="w-10 h-10 bg-blue-300 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md">
+      <div className="w-15 h-15 bg-blue-300 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md">
         {review?.user_display_name 
           ? review.user_display_name.charAt(0).toUpperCase()
           : review?.reviewer_name?.charAt(0).toUpperCase() || "U"
@@ -393,7 +396,7 @@ const ReviewSection = ({ bookId }) => {
             {[1, 2, 3, 4, 5].map((star) => (
               <span
                 key={star}
-                className={`cursor-pointer text-2xl ${
+                className={`cursor-pointer text-3xl ${
                   star <= rating ? "text-yellow-500" : "text-gray-300"
                 } hover:text-yellow-400 transition-colors`}
                 onClick={() => handleRating(star)}
@@ -409,7 +412,7 @@ const ReviewSection = ({ bookId }) => {
           </div>
           <div className="mt-4">
             <textarea
-              className="w-full border rounded-md p-2 resize-none"
+              className="w-full border-none rounded-md  resize-none"
               placeholder="Write your review..."
               value={review}
               onChange={(e) => setReview(e.target.value)}
@@ -433,31 +436,18 @@ const ReviewSection = ({ bookId }) => {
       {isLoggedIn && hasReviewed && userReview && (
         <div className="mt-6">
           <h3 className="text-lg font-bold mb-4">Your Review</h3>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-blue-800 text-sm mb-3">
-              คุณเคยรีวิวหนังสือเล่มนี้ไปแล้ว หากต้องการรีวิวอีกครั้งให้แก้ไขหรือลบรีวิวของคุณ
+          <div className="border border-blue-800 rounded-lg p-4">
+            <p className="text-blue-800 text-sm mb-3 mt-2 flex justify-center">
+            You have already reviewed this book. If you would like to review it again, edit or delete your review.
             </p>
             
             {!editMode ? (
               <div>
-                {/* Rating Stars */}
-                <div className="flex items-center gap-2 mb-3">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      className={`text-xl ${star <= userReview.rating ? "text-yellow-500" : "text-gray-300"}`}
-                    >
-                      ★
-                    </span>
-                  ))}
-                  <span className="text-sm text-gray-500 ml-2">
-                    ({userReview.rating} star{userReview.rating > 1 ? "s" : ""})
-                  </span>
-                </div>
+                
 
                 {/* User Info */}
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 p-5">
                     {renderUserAvatar(userReview)}
                     <div>
                       <p className="font-semibold text-gray-800">
@@ -466,26 +456,43 @@ const ReviewSection = ({ bookId }) => {
                       <p className="text-sm text-gray-500">
                         {new Date(userReview.review_date).toLocaleDateString()}
                       </p>
+                      {/* Comment */}
+                      <p className="text-gray-700">{userReview.comment}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+<div>
+  {/* Rating Stars */}
+                <div className="flex items-center gap-2 ">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={`text-2xl ${star <= userReview.rating ? "text-yellow-500" : "text-gray-300"}`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                  <span className="text-sm text-gray-500 ml-2">
+                    ({userReview.rating} star{userReview.rating > 1 ? "s" : ""})
+                  </span>
+                </div>
+                  <div className="flex gap-5 justify-end">
                     <button
-                      className="text-blue-600 text-sm hover:text-blue-800 font-medium transition-colors"
+                      className="text-black text-sm font-bold hover:text-blue-800  transition-colors"
                       onClick={() => startEditReview(userReview)}
                     >
-                      edit
+                      Edit
                     </button>
                     <button
-                      className="text-red-600 text-sm hover:text-red-800 font-medium transition-colors"
+                      className="text-black text-sm hover:text-red-600 font-bold transition-colors"
                       onClick={() => handleDeleteReview(userReview._id)}
                     >
-                      delete
+                      Delete
                     </button>
                   </div>
                 </div>
+</div>
+                  
 
-                {/* Comment */}
-                <p className="text-gray-700">{userReview.comment}</p>
               </div>
             ) : (
               /* Edit Form */
@@ -495,7 +502,7 @@ const ReviewSection = ({ bookId }) => {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <span
                       key={star}
-                      className={`cursor-pointer text-2xl ${star <= editRating ? "text-yellow-500" : "text-gray-300"} hover:text-yellow-400 transition-colors`}
+                      className={`cursor-pointer text-3xl ${star <= editRating ? "text-yellow-500" : "text-gray-300"} hover:text-yellow-400 transition-colors`}
                       onClick={() => setEditRating(star)}
                     >
                       ★
@@ -546,14 +553,27 @@ const ReviewSection = ({ bookId }) => {
             No other reviews yet.
           </p>
         ) : (
-          <div className="space-y-4 mt-4">
+          <div className="space-y-4 mt-4 px-5">
             {otherReviews.map((r, index) => (
               <div key={`${r._id}-${index}`} className="border-b pb-4 last:border-b-0">
-                <div className="flex items-center gap-2 mb-2">
+
+                <div className="flex items-center gap-3 mb-2 ">
+                  {renderUserAvatar(r)}
+                  <div className="flex items-center gap-2 justify-between w-full">
+                    <div>
+                    <p className="font-semibold text-gray-800">
+                      {r.user_display_name || r.reviewer_name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(r.review_date).toLocaleDateString()}
+                    </p>
+                    <p className="text-gray-700">{r.comment}</p>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <span
                       key={star}
-                      className={`text-xl ${star <= r.rating ? "text-yellow-500" : "text-gray-300"}`}
+                      className={`text-2xl ${star <= r.rating ? "text-yellow-500" : "text-gray-300"}`}
                     >
                       ★
                     </span>
@@ -562,20 +582,11 @@ const ReviewSection = ({ bookId }) => {
                     ({r.rating} star{r.rating > 1 ? "s" : ""})
                   </span>
                 </div>
-
-                <div className="flex items-center gap-3 mb-2">
-                  {renderUserAvatar(r)}
-                  <div>
-                    <p className="font-semibold text-gray-800">
-                      {r.user_display_name || r.reviewer_name}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(r.review_date).toLocaleDateString()}
-                    </p>
                   </div>
+                  
                 </div>
 
-                <p className="text-gray-700">{r.comment}</p>
+                
               </div>
             ))}
           </div>
