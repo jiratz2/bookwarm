@@ -235,15 +235,17 @@ const ClubProfile = () => {
               <div className="px-32 py-10">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold">Posts</h2>
-                  <button
-                    onClick={() => setShowCreateForm(!showCreateForm)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  >
-                    {showCreateForm ? "Cancel" : "Create Post"}
-                  </button>
+                  {(members.includes(currentUserId) || currentUserId === ownerId) && (
+                    <button
+                      onClick={() => setShowCreateForm(!showCreateForm)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                      {showCreateForm ? "Cancel" : "Create Post"}
+                    </button>
+                  )}
                 </div>
 
-                {showCreateForm && (
+                {showCreateForm && (members.includes(currentUserId) || currentUserId === ownerId) && (
                   <div className="mb-6">
                     <CreatePostForm 
                       clubId={id} 
