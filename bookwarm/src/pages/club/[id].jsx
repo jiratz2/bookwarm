@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Post from "../../components/Post"; // นำเข้า Post component
+import Post from "../../components/Post";
+import CreatePostForm from "../../components/CreatePostForm";
 
 const ClubProfile = () => {
   const router = useRouter();
@@ -234,15 +235,32 @@ const ClubProfile = () => {
               <div className="px-32 py-10">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold">Posts</h2>
-                  <button
-                    onClick={() => setShowCreateForm(!showCreateForm)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  >
-                    {showCreateForm ? "Cancel" : "Create Post"}
-                  </button>
+                  {(members.includes(currentUserId) || currentUserId === ownerId) && (
+                    <button
+                      onClick={() => setShowCreateForm(!showCreateForm)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                      {showCreateForm ? "Cancel" : "Create Post"}
+                    </button>
+                  )}
                 </div>
 
-                <Post clubId={id} showCreateForm={showCreateForm} />
+                {showCreateForm && (members.includes(currentUserId) || currentUserId === ownerId) && (
+                  <div className="mb-6">
+                    <CreatePostForm 
+                      clubId={id} 
+                      onPostCreated={() => {
+                        setShowCreateForm(false);
+                        // Refresh posts
+                        if (typeof window !== 'undefined') {
+                          window.location.reload();
+                        }
+                      }} 
+                    />
+                  </div>
+                )}
+
+                <Post clubId={id} />
               </div>
             </div>
           </div>

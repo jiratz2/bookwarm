@@ -16,14 +16,16 @@ func main() {
 	// ตั้งค่า Static File Server สำหรับโฟลเดอร์ uploads
 	router.Static("/uploads", "./uploads")
 	
-	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
-		// AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
+	corsConfig := cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-	}))
+	}
 	
+	router.Use(cors.New(corsConfig))
+
 	// สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
 	if err := os.MkdirAll("uploads", 0755); err != nil {
 		fmt.Printf("Error creating uploads directory: %v\n", err)
@@ -41,8 +43,9 @@ func main() {
 	routes.ReviewRoutes(router)
 	routes.MarkRoutes(router)
 	routes.ClubRoutes(router)
-	// routes.PostRoutes(router)
+	routes.PostRoutes(router)
 	routes.CommentRoutes(router)
+	routes.ReplyRoutes(router)
 
 	router.Run(":8080")
 }

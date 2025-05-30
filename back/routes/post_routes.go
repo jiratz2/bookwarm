@@ -1,21 +1,21 @@
 package routes
 
-// import (
-// 	"back/controllers"
-// 	"back/middleware"
+import (
+	"back/controllers"
+	"back/middleware"
 
-// 	"github.com/gin-gonic/gin"
-// )
+	"github.com/gin-gonic/gin"
+)
 
-// func PostRoutes(router *gin.Engine) {
-// 	post := router.Group("/api/post")
-// 	{
-// 		// GET route - no auth needed for reading posts
-// 		post.GET("/", controllers.GetPostsByClub)
+func PostRoutes(router *gin.Engine) {
+	post := router.Group("/api/post")
+	{
+		// 🌍 Public routes - ทุกคนเข้าได้ (ไม่ต้อง auth)
+		post.GET("/", controllers.GetPostsByClub) // ดูโพสต์
 		
-// 		// Protected routes - apply middleware to specific routes
-// 		post.POST("/", middleware.JWTAuthMiddleware(), controllers.CreatePost)
-// 		post.DELETE("/:id", middleware.JWTAuthMiddleware(), controllers.DeletePost)
-// 		post.PUT("/:id/like", middleware.JWTAuthMiddleware(), controllers.ToggleLikePost)
-// 	}
-// }
+		// 🔒 Protected routes - ต้อง login และเป็นสมาชิก
+		post.POST("/", middleware.JWTAuthMiddleware(), controllers.CreatePost)
+		post.DELETE("/:id", middleware.JWTAuthMiddleware(), controllers.DeletePost)
+		post.PUT("/:id/like", middleware.JWTAuthMiddleware(), controllers.ToggleLikePost)
+	}
+}
