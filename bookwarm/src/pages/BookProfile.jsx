@@ -1,8 +1,7 @@
-import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useRouter } from 'next/router';
 
-const bookprofile = () => {
+const BookProfilePage = () => {
   const router = useRouter();
   const { id } = router.query;
   const [book, setBook] = useState(null);
@@ -12,13 +11,23 @@ const bookprofile = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    if(!router.isReady || !id) return; // Wait for router to be ready
-    // ดึงข้อมูลหนังสือจาก backend
+    if (!router.isReady || !id) return;
+    
+    console.log('Fetching book with ID:', id); // เพื่อ debug
+    
     fetch(`http://localhost:8080/api/books/${id}`)
-      .then((res) => res.json())
-      .then((data) => setBook(data))
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log('Book data:', data); // เพื่อ debug
+        setBook(data);
+      })
       .catch((error) => {
-        console.error("Error fetching book data:", error);
+        console.error('Error fetching book:', error);
         setBook(null);
       });
   }, [id, router.isReady]);
@@ -35,25 +44,39 @@ const bookprofile = () => {
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
+  if (!router.isReady) {
+    return <div className="p-6 max-w-4xl mx-auto mt-20">Loading router...</div>;
+  }
+
   if (!book) {
-    return <div className="p-6 max-w-4xl mx-auto mt-20">Loading...</div>;
+    return <div className="p-6 max-w-4xl mx-auto mt-20">Loading book data...</div>;
   }
 
   return (
     <div className="p-6 max-w-4xl mx-auto mt-20">
       {/* ส่วนหัว */}
-      <div className="flex flex-col sm:flex-row gap-6">
+      <div className="flex gap-6">
         <img
           src={book.coverImage || "https://via.placeholder.com/150"}
           alt={book.title}
-          className="w-40 h-60 sm:w-48 sm:h-72 object-cover rounded-md mx-auto sm:mx-0"
+          className="w-48 h-72 object-cover rounded-md"
         />
         <div>
           <h1 className="text-2xl font-bold">{book.title}</h1>
           <p className="text-gray-600">By {book.author?.[0]?.name || "Unknown Author"}</p>
           <p className="text-gray-600">First publish {book.publishYear || "-"}</p>
-          <p className="text-gray-600">{book.pages || "-"} pages</p>
-          <p className="text-gray-600">rating</p>
+          <p className="text-gray-600">{book.pageCount || "-"} pages</p>
+          <div className="mt-2 flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={`text-lg ${star <= book.rating ? 'text-yellow-500' : 'text-gray-300'}`}
+              >
+                ★
+              </span>
+            ))}
+            <span className="text-sm text-gray-600 ml-2">({book.rating.toFixed(1)})</span>
+          </div>
 
           {/* ปุ่ม Want to Read */}
           <div className="relative mt-4">
@@ -87,10 +110,30 @@ const bookprofile = () => {
 
           {/* แท็ก */}
           <div className="flex flex-wrap gap-2 mt-4">
+            {(book.category || []).map((category, index) => (
+              <span
+                key={index}
+                className="bg-blue-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+              >
+                {category.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(book.genres || []).map((genre, index) => (
+              <span
+                key={index}
+                className="bg-red-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+              >
+                {genre.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
             {(book.tags || []).map((tag, index) => (
               <span
                 key={index}
-                className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+                className="bg-green-200 text-gray-700 px-2 py-1 rounded-full text-xs"
               >
                 {tag.name}
               </span>
@@ -127,14 +170,14 @@ const bookprofile = () => {
           </div>
           <div className="mt-4">
             <textarea
-              className="w-full border rounded-md p-2 text-sm sm:text-base"
+              className="w-full border rounded-md p-2"
               placeholder="Write something..."
               value={review}
               onChange={(e) => setReview(e.target.value)}
             />
           </div>
           <button
-            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition mt-4 w-full sm:w-auto"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition mt-4"
             onClick={handleSubmitReview}
           >
             Send
@@ -165,4 +208,4 @@ const bookprofile = () => {
   );
 };
 
-export default bookprofile;
+export default BookProfilePage;

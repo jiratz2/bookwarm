@@ -124,6 +124,53 @@ const BookProfilePage = () => {
             e.target.src = "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover";
           }}
         />
+
+        <div>
+          <h1 className="text-2xl font-bold">{book.title}</h1>
+          <p className="text-gray-600">By {book.author?.[0]?.name || "Unknown Author"}</p>
+          <p className="text-gray-600">First publish {book.publishYear || "-"}</p>
+          <p className="text-gray-600">{book.pageCount || "-"} pages</p>
+          <div className="mt-2 flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <span
+                key={star}
+                className={`text-lg ${star <= book.rating ? 'text-yellow-500' : 'text-gray-300'}`}
+              >
+                ★
+              </span>
+            ))}
+            <span className="text-sm text-gray-600 ml-2">({book.rating.toFixed(1)})</span>
+          </div>
+
+          {/* ปุ่ม Want to Read */}
+          <div className="relative mt-4">
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition flex items-center"
+              onClick={toggleDropdown}
+            >
+              Want to Read
+              <span className="ml-2">▼</span>
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-blue-600 text-white border border-blue-700 rounded-md shadow-lg z-10">
+                <ul className="py-2">
+                  <li className="px-4 py-2 font-bold">Mark as</li>
+                  <li className="pl-6 pr-4 py-2 hover:bg-blue-700 cursor-pointer">
+                    Want to Read
+                  </li>
+                  <li className="pl-6 pr-4 py-2 hover:bg-blue-700 cursor-pointer">
+                    Now Reading
+                  </li>
+                  <li className="pl-6 pr-4 py-2 hover:bg-blue-700 cursor-pointer">
+                    Read
+                  </li>
+                  <li className="pl-6 pr-4 py-2 hover:bg-blue-700 cursor-pointer">
+                    Did Not Finish
+                  </li>
+                </ul>
+              </div>
+            )}
+
         <div className="flex-1">
           <h1 className="text-3xl font-bold mb-2">{book.title}</h1>
           <p className="text-xl text-gray-600 mb-1">
@@ -133,11 +180,44 @@ const BookProfilePage = () => {
           <div className="text-gray-600 space-y-1 mb-4">
             <p>First published: {book.publishYear || "Unknown"}</p>
             <p>Pages: {book.pages || "Unknown"}</p>
+
           </div>
 
           <MarkButton bookId={id} user={currentUser}/>
 
           {/* แท็ก */}
+
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(book.category || []).map((category, index) => (
+              <span
+                key={index}
+                className="bg-blue-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+              >
+                {category.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(book.genres || []).map((genre, index) => (
+              <span
+                key={index}
+                className="bg-red-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+              >
+                {genre.name}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(book.tags || []).map((tag, index) => (
+              <span
+                key={index}
+                className="bg-green-200 text-gray-700 px-2 py-1 rounded-full text-xs"
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+
           {book.tags && book.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-6">
               {book.tags.map((tag, index) => (
@@ -150,6 +230,7 @@ const BookProfilePage = () => {
               ))}
             </div>
           )}
+
         </div>
       </div>
 
