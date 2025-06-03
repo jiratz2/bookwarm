@@ -12,6 +12,7 @@ func PostRoutes(router *gin.Engine) {
 	{
 		// 🌍 Public routes - ทุกคนเข้าได้ (ไม่ต้อง auth)
 		post.GET("/", controllers.GetPostsByClub) // ดูโพสต์
+		post.GET("/random", controllers.GetRandomPosts)
 		
 		// 🔒 Protected routes - ต้อง login และเป็นสมาชิก
 		post.POST("/", middleware.JWTAuthMiddleware(), controllers.CreatePost)

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
 
-const MarkButton = ({ bookId }) => {
+const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(null);
   const [currentMarkId, setCurrentMarkId] = useState(null);
@@ -19,9 +18,15 @@ const MarkButton = ({ bookId }) => {
   useEffect(() => {
     if (bookId) {
       const fetchMark = async () => {
+        setIsLoading(true);
+        console.log("Fetching mark for bookId:", bookId);
         try {
           const token = localStorage.getItem("token");
-          if (!token) return;
+          if (!token) {
+            console.log("No token found for fetching mark");
+            setIsLoading(false);
+            return;
+          }
 
           const res = await fetch(
             `http://localhost:8080/api/marks/${bookId}`,
@@ -33,15 +38,28 @@ const MarkButton = ({ bookId }) => {
             }
           );
 
+          console.log("Fetch mark response status:", res.status);
+
           if (res.ok) {
             const data = await res.json();
+            console.log("Fetch mark successful, data:", data);
             setCurrentStatus(data.status);
             setCurrentMarkId(data._id);
+            console.log("Set currentStatus to:", data.status);
+            console.log("Set currentMarkId to:", data._id);
+          } else {
+            const errorData = await res.json();
+            console.error("Failed to fetch mark status, response not ok:", errorData.error);
+            setCurrentStatus(null);
+            setCurrentMarkId(null);
           }
         } catch (err) {
-          console.error("Failed to fetch mark status:", err);
+          console.error("Failed to fetch mark status (catch block):", err);
+          setCurrentStatus(null);
+          setCurrentMarkId(null);
         } finally {
           setIsLoading(false);
+          console.log("Fetch mark finished.");
         }
       };
 
@@ -53,7 +71,8 @@ const MarkButton = ({ bookId }) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        toast.error("Please login to mark books");
+        // Maybe show a login prompt instead of a toast here?
+        console.log("Please login to mark books");
         return;
       }
 
@@ -84,27 +103,39 @@ const MarkButton = ({ bookId }) => {
         if (!currentMarkId) {
           setCurrentMarkId(data.mark_id);
         }
-        toast.success(currentMarkId ? "Status updated successfully" : "Book marked successfully");
+        // Check for unlocked achievement
+        if (data.achievement && onAchievementUnlock) {
+          onAchievementUnlock(data.achievement, bookTitle);
+        }
         setIsDropdownOpen(false);
       } else {
         const errorData = await res.json();
-        toast.error(errorData.error || "Failed to update status");
+        console.error("Failed to update status:", errorData.error);
+        // Maybe show an error notification here?
       }
     } catch (err) {
       console.error(err);
-      toast.error("An error occurred while updating status");
+      // Maybe show an error notification here?
     }
   };
 
   const handleDeleteMark = async () => {
-    if (!currentMarkId) return;
+    console.log("handleDeleteMark called");
+    console.log("currentMarkId:", currentMarkId);
+    
+    if (!currentMarkId) {
+      console.log("No mark ID found");
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        toast.error("Please login to mark books");
+        console.log("Please login to mark books");
         return;
       }
+
+      console.log("Sending DELETE request to:", `http://localhost:8080/api/marks/${currentMarkId}`);
 
       const res = await fetch(
         `http://localhost:8080/api/marks/${currentMarkId}`,
@@ -117,24 +148,31 @@ const MarkButton = ({ bookId }) => {
         }
       );
 
+      console.log("Response status:", res.status);
+
       if (res.ok) {
         setCurrentStatus(null);
         setCurrentMarkId(null);
-        toast.success("Status removed successfully");
         setIsDropdownOpen(false);
+        console.log("Mark deleted successfully");
       } else {
         const errorData = await res.json();
-        toast.error(errorData.error || "Failed to remove status");
+        console.error("Failed to remove status:", errorData.error);
+        alert("ไม่สามารถลบสถานะได้: " + errorData.error);
       }
     } catch (err) {
-      console.error(err);
-      toast.error("An error occurred while removing status");
+      console.error("Error deleting mark:", err);
+      alert("เกิดข้อผิดพลาดในการลบสถานะ กรุณาลองใหม่อีกครั้ง");
     }
   };
 
   const buttonClass = currentStatus 
     ? "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-md text-sm transition flex items-center gap-2"
     : "bg-blue-800 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-sm hover:bg-blue-700 transition flex items-center gap-2";
+
+    if (isLoading) {
+      return <div className="mt-6">Loading...</div>;
+    }
 
   return (
     <div className="relative mt-6 dropdown-container">
@@ -174,7 +212,10 @@ const MarkButton = ({ bookId }) => {
             {currentStatus && (
               <li
                 className="px-4 py-2.5 text-red-600 hover:bg-red-50 cursor-pointer border-t border-gray-100 font-medium transition-colors duration-150 rounded-b-lg"
-                onClick={handleDeleteMark}
+                onClick={() => {
+                  console.log("Delete button clicked");
+                  handleDeleteMark();
+                }}
               >
                 Remove status
               </li>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Filter from "@/components/Filter";
 import BookList from "@/components/BookList";
+import Toast from "@/components/Toast";
 
 const Explore = () => {
   const [filters, setFilters] = useState({
@@ -10,6 +11,8 @@ const Explore = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const toggleFilter = () => {
     setIsFilterOpen(!isFilterOpen);
@@ -19,7 +22,7 @@ const Explore = () => {
     <div className="explore mt-[100px]">
       <main className="relative">
         {/* Filter Toggle Button - Only visible on mobile */}
-        {/* <button
+        <button
           onClick={toggleFilter}
           className="lg:hidden fixed bottom-6 right-6 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 flex items-center gap-2"
         >
@@ -29,21 +32,22 @@ const Explore = () => {
           <span className="text-sm font-medium">
             {isFilterOpen ? "Close" : "Filters"}
           </span>
-        </button> */}
+        </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 p-4">
           {/* Filter Sidebar */}
           <aside 
-            className={`fixed lg:static inset-0 z-40 bg-white lg:bg-transparent transform transition-transform duration-300 ease-in-out ${
-              isFilterOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-            } lg:transform-none`}
-          >
-            <div className="h-full lg:h-auto overflow-y-auto lg:overflow-visible p-6 lg:p-0">
-              <div className="p-6 rounded-xl shadow-md text-base transition-all duration-300 ease-in-out hover:shadow-lg hover:translate-y-[-2px] bg-white">
-                <Filter setFilters={setFilters} onClose={toggleFilter} />
-              </div>
-            </div>
-          </aside>
+  className={`fixed lg:sticky top-[100px] lg:top-[100px] z-40 bg-white lg:bg-transparent transform transition-transform duration-300 ease-in-out ${
+    isFilterOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+  } lg:transform-none h-full lg:h-fit`}
+>
+  <div className="h-full lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-none p-6 lg:p-0">
+    <div className="p-6 rounded-xl shadow-md text-base transition-all scrollbar-none duration-300 ease-in-out hover:shadow-lg hover:translate-y-[-2px] bg-white">
+      <Filter setFilters={setFilters} onClose={toggleFilter} />
+    </div>
+  </div>
+</aside>
+
 
           {/* Main Content */}
           <section className="w-full">
@@ -84,6 +88,14 @@ const Explore = () => {
           />
         )}
       </main>
+
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setShowToast(false)}
+          duration={5000}
+        />
+      )}
     </div>
   );
 };

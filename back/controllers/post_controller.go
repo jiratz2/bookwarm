@@ -80,7 +80,7 @@ func CreatePost(c *gin.Context) {
 	}
 
 	// ตรวจสอบและแปลง book_id ถ้ามี
-	if !post.BookID.IsZero() {
+	if post.BookID != nil && !post.BookID.IsZero() {
 		// ตรวจสอบว่าหนังสือมีอยู่จริงหรือไม่
 		bookCollection := config.DB.Database("bookwarm").Collection("books")
 		count, err := bookCollection.CountDocuments(context.TODO(), bson.M{"_id": post.BookID})
@@ -300,4 +300,90 @@ func DeletePost(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Post deleted successfully"})
+}
+
+// GetRandomPosts ดึงโพสต์แบบสุ่ม
+func GetRandomPosts(c *gin.Context) {
+	postCollection := config.DB.Database("bookwarm").Collection("post")
+
+	pipeline := mongo.Pipeline{
+		// Join with users
+		bson.D{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "user_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "user"},
+		}}},
+		bson.D{{Key: "$unwind", Value: bson.D{
+			{Key: "path", Value: "$user"},
+			{Key: "preserveNullAndEmptyArrays", Value: true},
+		}}},
+
+		// Join with books (optional)
+		bson.D{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "books"},
+			{Key: "localField", Value: "book_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "book"},
+		}}},
+		bson.D{{Key: "$unwind", Value: bson.D{
+			{Key: "path", Value: "$book"},
+			{Key: "preserveNullAndEmptyArrays", Value: true},
+		}}},
+
+		// Join with clubs
+		bson.D{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "clubs"},
+			{Key: "localField", Value: "club_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "club"},
+		}}},
+		bson.D{{Key: "$unwind", Value: bson.D{
+			{Key: "path", Value: "$club"},
+			{Key: "preserveNullAndEmptyArrays", Value: true},
+		}}},
+
+		// Project required fields
+		bson.D{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 1},
+			{Key: "content", Value: 1},
+			{Key: "club_id", Value: 1},
+			{Key: "user_id", Value: 1},
+			{Key: "user_display_name", Value: "$user.displayname"},
+			{Key: "user_profile_image", Value: "$user.profile_img_url"},
+			{Key: "book_id", Value: 1},
+			{Key: "book_title", Value: "$book.title"},
+			{Key: "book_author", Value: "$book.author"},
+			{Key: "likes", Value: 1},
+			{Key: "likes_count", Value: bson.D{{Key: "$size", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$likes", bson.A{}}}}}}},
+			{Key: "created_at", Value: 1},
+			{Key: "updated_at", Value: 1},
+			{Key: "club_name", Value: "$club.name"},
+		}}},
+
+		// Randomly sample 6 posts
+		bson.D{{Key: "$sample", Value: bson.D{
+			{Key: "size", Value: 6},
+		}}},
+	}
+
+	log.Println("Executing aggregation pipeline for random posts...")
+	cursor, err := postCollection.Aggregate(context.TODO(), pipeline)
+	if err != nil {
+		log.Println("❌ Aggregation error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error aggregating posts"})
+		return
+	}
+
+	var posts []bson.M
+	if err := cursor.All(context.TODO(), &posts); err != nil {
+		log.Println("❌ Cursor decode error:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding posts"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"posts": posts,
+		"count": len(posts),
+	})
 }

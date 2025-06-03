@@ -6,6 +6,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Post from "../../components/Post";
 import CreatePostForm from "../../components/CreatePostForm";
+import RecommendSection from "../../components/RecommendSection";
 
 const ClubProfile = () => {
   const router = useRouter();
@@ -20,8 +21,6 @@ const ClubProfile = () => {
   const [ownerName, setOwnerName] = useState("");
   const [members, setMembers] = useState([]);
   const [currentUserId, setCurrentUserId] = useState("");
-
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const fetchClubs = async () => {
     if (!id) return; // ต้องรอให้ id พร้อมก่อน
@@ -174,22 +173,20 @@ const ClubProfile = () => {
   };
 
   return (
-    <div className="mt-[100px] max-w-screen mx-auto bg-white min-h-screen">
+    <div className="mt-[80px] max-w-screen mx-auto bg-white min-h-screen">
       <ToastContainer />
       <div className="relative">
-        <div className="w-full h-40 md:h-60 lg:h-50 bg-gray-200 relative">
+        <div className="w-full h-32 md:h-48 lg:h-40 bg-gray-200 relative">
           {isLoading ? (
             <div className="w-full h-full bg-gray-300 animate-pulse" />
           ) : coverPhoto ? (
             <div className="relative w-full h-full">
-              {/* ภาพจริง ไม่เบลอ */}
               <img
                 src={getImageUrl(coverPhoto)}
                 alt="Cover photo"
                 className="w-full h-full object-cover"
               />
 
-              {/* ชั้นเบลอซ้อนทับ */}
               <div className="absolute inset-0">
                 <img
                   src={getImageUrl(coverPhoto)}
@@ -208,64 +205,55 @@ const ClubProfile = () => {
           )}
 
           <div className="flex justify-evenly">
-            <div className="absolute left-1/2 transform -translate-x-1/2 md:left-32 md:translate-x-0 -bottom-20">
+            <div className="absolute left-1/2 transform -translate-x-1/2 md:left-24 md:translate-x-0 -bottom-16">
               <div className="relative"></div>
             </div>
-            <div className="mt-4 sm:mt-0 sm:ml-4 px-32 flex justify-between w-full">
-              <div className="mt-3 px-50">
-                <h1 className="text-3xl text-black font-bold uppercase">
+            <div className="mt-2 sm:mt-0 sm:ml-4 mr-10 flex justify-between w-full">
+              <div className="mt-2 px-40">
+                <h1 className="text-2xl text-black font-bold uppercase">
                   {clubName}
                 </h1>
-                <p className="text-gray-600 mt-1 text-lg max-w-5xl ">
+                <p className="text-gray-600 mt-1 text-base max-w-4xl">
                   {description}
                 </p>
-                <p className="text-gray-500 mt-2 text-sm">
+                <p className="text-gray-500 mt-1 text-sm">
                   Owned by <span className="font-semibold">{ownerName}</span>
-                  {/* Display member count */}
                   {members && Array.isArray(members) && (
-                    <span className="ml-4">{members.length} members</span>
+                    <span className="ml-3">{members.length} members</span>
                   )}
                 </p>
               </div>
               <div>
-                <div className="mt-5">{renderActionButton()}</div>
+                <div className="mt-3 mr-30">{renderActionButton()}</div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-between">
-            <div>club recommend</div>
-            <div className="mt-[100px] max-w-screen mx-auto bg-white min-h-screen">
-              <div className="px-32 py-10">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold">Posts</h2>
-                  {(members.includes(currentUserId) || currentUserId === ownerId) && (
-                    <button
-                      onClick={() => setShowCreateForm(!showCreateForm)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                      {showCreateForm ? "Cancel" : "Create Post"}
-                    </button>
-                  )}
-                </div>
-
-                {showCreateForm && (members.includes(currentUserId) || currentUserId === ownerId) && (
-                  <div className="mb-6">
-                    <CreatePostForm 
-                      clubId={id} 
-                      onPostCreated={() => {
-                        setShowCreateForm(false);
-                        // Refresh posts
-                        if (typeof window !== 'undefined') {
-                          window.location.reload();
-                        }
-                      }} 
-                    />
-                  </div>
-                )}
-
-                <Post clubId={id} />
+          <div className="flex flex-col lg:flex-row gap-6 px-4 mx-10 sm:px-6 md:px-8 lg:px-32 py-10">
+            <div className="w-full lg:w-3/4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Posts</h2>
               </div>
+
+              {(members.includes(currentUserId) || currentUserId === ownerId) && (
+                <div className="mb-6">
+                  <CreatePostForm
+                    clubId={id}
+                    onPostCreated={() => {
+                      if (typeof window !== 'undefined') {
+                        window.location.reload();
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              <Post clubId={id} />
+            </div>
+
+            <div className="w-full lg:w-1/4 lg:pl-6">
+              <h2 className="text-2xl font-bold mb-6">Recommended Clubs</h2>
+              <RecommendSection />
             </div>
           </div>
         </div>

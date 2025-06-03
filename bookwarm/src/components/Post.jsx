@@ -361,7 +361,11 @@ const Post = ({ clubId }) => {
 
   return (
     <div className="space-y-4">
-      <CreatePostForm clubId={clubId} onPostCreated={fetchPosts} />
+      {/* <CreatePostForm clubId={clubId} onPostCreated={fetchPosts} />*/}
+
+      {loading && <p>Loading posts...</p>}
+      {error && <p className="text-red-500">Error: {error}</p>}
+
       {posts.map((post) => (
         <div
           key={post._id}
@@ -480,20 +484,26 @@ const Post = ({ clubId }) => {
               setShowReplyForm(prev => ({ ...prev, [post._id]: !prev[post._id] }));
               if (!replies[post._id]) fetchReplies(post._id);
             }}
+            className="m-2"
           >
             ตอบกลับ
           </button>
           {typeof window !== "undefined" && localStorage.getItem("token") && showReplyForm[post._id] && (
-            <form onSubmit={e => { e.preventDefault(); handleReply(post._id); }}>
+            <form onSubmit={e => { e.preventDefault(); handleReply(post._id); }} className="mt-4 flex items-center space-x-2">
               <textarea
                 value={replyContent[post._id] || ""}
                 onChange={e => setReplyContent(prev => ({ ...prev, [post._id]: e.target.value }))}
+                className="flex-grow p-2 border border-gray-300 rounded-md resize-none text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Write a reply..."
+                rows={1}
               />
-              <button type="submit">ส่ง</button>
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Send
+              </button>
             </form>
           )}
           {!typeof window !== "undefined" && !localStorage.getItem("token") && showReplyForm[post._id] && (
-            <div className="text-red-500">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</div>
+            <div className="text-red-500 text-sm mt-2">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</div>
           )}
 
           {/* แสดง replies เฉพาะของโพสต์นี้ */}

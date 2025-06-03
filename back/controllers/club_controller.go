@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"log"
 )
@@ -387,4 +388,91 @@ func GetClubsByUser(c *gin.Context) {
 
 	log.Printf("Successfully fetched %d clubs\n", len(clubs)) // Log success count
 	c.JSON(http.StatusOK, clubs)
+}
+
+// GetRecommendedClubs returns clubs sorted by member count
+func GetRecommendedClubs(c *gin.Context) {
+	log.Println("Getting recommended clubs...")
+	
+	// Get top 6 clubs with most members
+	pipeline := mongo.Pipeline{
+		{{Key: "$addFields", Value: bson.D{
+			{Key: "member_count", Value: bson.D{
+				{Key: "$size", Value: bson.D{
+					{Key: "$ifNull", Value: []interface{}{"$members", []interface{}{}}},
+				}},
+			}},
+		}}},
+		{{Key: "$sort", Value: bson.D{{Key: "member_count", Value: -1}}}},
+		{{Key: "$limit", Value: 6}},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "owner_id"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "owner"},
+		}}},
+		{{Key: "$unwind", Value: bson.D{
+			{Key: "path", Value: "$owner"},
+			{Key: "preserveNullAndEmptyArrays", Value: true},
+		}}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 1},
+			{Key: "name", Value: 1},
+			{Key: "description", Value: 1},
+			{Key: "cover_image", Value: 1},
+			{Key: "owner_id", Value: 1},
+			{Key: "owner_display_name", Value: "$owner.display_name"},
+			{Key: "members", Value: 1},
+			{Key: "member_count", Value: 1},
+			{Key: "created_at", Value: 1},
+			{Key: "updated_at", Value: 1},
+		}}},
+	}
+
+	log.Println("Executing aggregation pipeline...")
+	collection := config.DB.Database("bookwarm").Collection("clubs")
+	if collection == nil {
+		log.Println("Error: Collection is nil")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database collection not found"})
+		return
+	}
+
+	cursor, err := collection.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		log.Printf("Error in aggregation: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch recommended clubs"})
+		return
+	}
+	defer cursor.Close(context.Background())
+
+	var clubs []bson.M
+	if err = cursor.All(context.Background(), &clubs); err != nil {
+		log.Printf("Error decoding clubs: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode clubs"})
+		return
+	}
+
+	log.Printf("Found %d recommended clubs\n", len(clubs))
+
+	// Convert ObjectIDs to strings
+	for i := range clubs {
+		if id, ok := clubs[i]["_id"].(primitive.ObjectID); ok {
+			clubs[i]["_id"] = id.Hex()
+		}
+		if ownerID, ok := clubs[i]["owner_id"].(primitive.ObjectID); ok {
+			clubs[i]["owner_id"] = ownerID.Hex()
+		}
+		if members, ok := clubs[i]["members"].(primitive.A); ok {
+			memberIDs := make([]string, len(members))
+			for j, member := range members {
+				if memberID, ok := member.(primitive.ObjectID); ok {
+					memberIDs[j] = memberID.Hex()
+				}
+			}
+			clubs[i]["members"] = memberIDs
+		}
+	}
+
+	log.Println("Successfully processed clubs data")
+	c.JSON(http.StatusOK, gin.H{"clubs": clubs})
 }

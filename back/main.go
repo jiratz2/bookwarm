@@ -31,15 +31,15 @@ func main() {
 		fmt.Printf("Error creating uploads directory: %v\n", err)
 	}
 
-	
-	
 	config.ConnectDB()
+
+	// Setup routes
 	routes.AuthRoutes(router)
 	routes.CategoryRoutes(router)
 	routes.GenreRoutes(router)
 	routes.TagRoutes(router)
 	routes.AuthorRoutes(router)
-	routes.BooksRoutes(router)
+	routes.BookRoutes(router)
 	routes.ReviewRoutes(router)
 	routes.MarkRoutes(router)
 	routes.ClubRoutes(router)

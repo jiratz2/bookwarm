@@ -7,20 +7,55 @@ const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedin, setIsLoggedin] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [userProfilePictureUrl, setUserProfilePictureUrl] = useState(null);
+  const [userDisplayName, setUserDisplayName] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if(token) {
       setIsLoggedin(true);
+      fetchUserProfile(token);
     }
   }, []);
+
+  const fetchUserProfile = async (token) => {
+    try {
+      const res = await fetch("http://localhost:8080/api/auth/profile", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUserDisplayName(data.displayname || "");
+
+        const getImageUrl = (imgUrl) => {
+          if (!imgUrl) return null;
+          if (imgUrl.startsWith("http")) return imgUrl;
+          if (imgUrl.startsWith("/uploads/")) return `http://localhost:8080${imgUrl}`;
+          return null;
+        };
+        setUserProfilePictureUrl(getImageUrl(data.profile_img_url));
+
+      } else {
+        console.error("Failed to fetch profile data for Navbar:", data);
+        setUserProfilePictureUrl(null);
+        setUserDisplayName("");
+      }
+    } catch (error) {
+      console.error("Error fetching user profile for Navbar:", error);
+      setUserProfilePictureUrl(null);
+      setUserDisplayName("");
+    }
+  };
 
   const handleProfileClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
   const handleLogout = () => {
-
     localStorage.removeItem("token")
     setIsLoggedin(false);
     setIsDropdownOpen(false);
@@ -43,26 +78,36 @@ const NavBar = () => {
         </a>
 
         {isLoggedin ? (
-          <div>
-            <a
-              href="#"
+          <div className="relative">
+            <button
               onClick={handleProfileClick}
-              className="font-bold text-black hover:text-blue-800"
+              className="flex items-center rounded-full focus:outline-none"
+              aria-label="Profile Menu"
             >
-              Profile
-            </a>
+              {userProfilePictureUrl ? (
+                <img
+                  src={userProfilePictureUrl}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-base">
+                  {userDisplayName ? userDisplayName.charAt(0).toUpperCase() : 'U'}
+                </div>
+              )}
+            </button>
             { isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md">
+              <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md z-10">
                 <a
                   href="/profile"
-                  className="flex  px-8  text-black font-bold hover:text-blue-800"
+                  className="flex px-8 py-2 text-black font-bold hover:text-blue-800"
                 >
                   Profile 
                 </a>
                 <Link
                   href="/"
                   onClick={handleLogout}
-                  className="block w-full px-4 py-2 pb-3 text-red-500 cursor-pointer font-bold underline underline-offset-4 hover:text-red-700"
+                  className="block w-full px-8 py-2 text-red-500 cursor-pointer font-bold underline underline-offset-4 hover:text-red-700"
                 >
                   Logout
                 </Link>
@@ -92,7 +137,6 @@ const NavBar = () => {
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         } transition-transform duration-300 ease-in-out z-50`}
       >
-        {/* ไอคอนปิด */}
         {isMenuOpen && (
           <button
             onClick={() => setIsMenuOpen(false)}
@@ -103,7 +147,6 @@ const NavBar = () => {
           </button>
         )}
 
-        {/* รายการเมนู */}
         <nav className="flex flex-col items-start px-15 gap-6 mt-20 text-lg font-bold">
           <a href="#" className="text-black">
             Discover

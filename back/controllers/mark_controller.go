@@ -12,6 +12,28 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Define a struct for the achievement data sent in the response
+type AchievementResponse struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	// Add other fields like icon, etc. if needed
+}
+
+// Helper function to count books marked as 'read' for a user
+func CountReadBooksForUser(userID primitive.ObjectID) (int64, error) {
+	collection := config.DB.Database("bookwarm").Collection("marks")
+	filter := bson.M{
+		"user_id": userID,
+		"status":  "read",
+	}
+	count, err := collection.CountDocuments(context.TODO(), filter)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func CreateMark(c *gin.Context) {
 	var input struct {
 		BookID primitive.ObjectID `json:"book_id" bson:"book_id"`
@@ -89,6 +111,68 @@ func CreateMark(c *gin.Context) {
 		return
 	}
 
+	// If status is "read", count read books and check for achievements
+	if newMark.Status == "read" {
+		readCount, err := CountReadBooksForUser(userID)
+		if err != nil {
+			// Log the error, but don't necessarily fail the request
+			println("Error counting read books for user", userID.Hex(), ":", err.Error())
+		} else {
+			// For now, print the count
+			println("User", userID.Hex(), "has read", readCount, "books.")
+		}
+
+		// --- Achievement Logic --- //
+		// Define achievement thresholds and placeholder ObjectIDs
+		const read1BookThreshold = 1
+		// Using fixed hex strings for dummy ObjectIDs to avoid re-generating
+		read1BookAchievementObjectID, _ := primitive.ObjectIDFromHex("60d5f9d5b281f1b2c3d4e5f6") // Dummy ObjectID for First Read
+
+		const read10BooksThreshold = 10
+		read10BooksAchievementObjectID, _ := primitive.ObjectIDFromHex("60d5fa83b281f1b2c3d4e5f7") // Dummy ObjectID for Bookworm Beginner
+
+		var unlockedAchievement *AchievementResponse = nil // Use pointer to AchievementResponse
+
+		// --- Check and Unlock Achievements (Simulated) ---
+		// In a real application, you would fetch the user's unlocked achievements
+		// and only unlock if the condition is met AND the achievement is not already unlocked.
+
+		// Simulate checking and unlocking "First Read"
+		// Check if count is exactly 1 AND (simulated) achievement is not unlocked yet
+		if readCount == read1BookThreshold /* && !isAchievementUnlocked(userID, read1BookAchievementObjectID) */ {
+			// Simulate getting achievement details (from a list or DB) and marking as unlocked
+			unlockedAchievement = &AchievementResponse{
+				ID: read1BookAchievementObjectID.Hex(), // Convert ObjectID to string for frontend
+				Name: "First Read",
+				Description: "Read your first book",
+			}
+			println("User", userID.Hex(), "unlocked achievement:", unlockedAchievement.Name)
+			// In a real app: Save this achievement (read1BookAchievementObjectID) as unlocked for the user in DB.
+
+		// Simulate checking and unlocking "Bookworm Beginner" ONLY if "First Read" wasn't just unlocked in this call
+		} else if unlockedAchievement == nil && readCount >= read10BooksThreshold /* && !isAchievementUnlocked(userID, read10BooksAchievementObjectID) */ {
+            // Simulate getting achievement details and marking as unlocked
+            unlockedAchievement = &AchievementResponse{
+                ID: read10BooksAchievementObjectID.Hex(), // Convert ObjectID to string
+                Name: "Bookworm Beginner",
+                Description: "Read 10 books",
+            }
+             println("User", userID.Hex(), "unlocked achievement:", unlockedAchievement.Name)
+             // In a real app: Save this achievement (read10BooksAchievementObjectID) as unlocked for the user in DB.
+        }
+
+		// --- End Achievement Logic --- //
+
+		// Include achievement in the response if an achievement was unlocked in this request
+		c.JSON(http.StatusCreated, gin.H{
+			"message": "Mark created successfully",
+			"mark_id": newMark.ID.Hex(), // Still include mark_id in Create response
+			"achievement": unlockedAchievement, // This will be null if no achievement was unlocked in this call
+		})
+		return // Return after sending response
+	}
+
+	// If status is not "read", send standard response for Create
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Mark created successfully",
 		"mark_id": newMark.ID.Hex(),
@@ -240,6 +324,67 @@ func UpdateMark(c *gin.Context) {
 		return
 	}
 
+	// If status is updated to "read", count read books and check for achievements
+	if input.Status == "read" {
+		readCount, err := CountReadBooksForUser(userID)
+		if err != nil {
+			// Log the error, but don't necessarily fail the request
+			println("Error counting read books for user", userID.Hex(), ":", err.Error())
+		} else {
+			// For now, print the count
+			println("User", userID.Hex(), "has read", readCount, "books.")
+		}
+
+		// --- Achievement Logic --- //
+		// Define achievement thresholds and placeholder ObjectIDs
+		const read1BookThreshold = 1
+		// Using fixed hex strings for dummy ObjectIDs to avoid re-generating
+		read1BookAchievementObjectID, _ := primitive.ObjectIDFromHex("60d5f9d5b281f1b2c3d4e5f6") // Dummy ObjectID for First Read
+
+		const read10BooksThreshold = 10
+		read10BooksAchievementObjectID, _ := primitive.ObjectIDFromHex("60d5fa83b281f1b2c3d4e5f7") // Dummy ObjectID for Bookworm Beginner
+
+		var unlockedAchievement *AchievementResponse = nil // Use pointer to AchievementResponse
+
+		// --- Check and Unlock Achievements (Simulated) ---
+		// In a real application, you would fetch the user's unlocked achievements
+		// and only unlock if the condition is met AND the achievement is not already unlocked.
+
+		// Simulate checking and unlocking "First Read"
+		// Check if count is exactly 1 AND (simulated) achievement is not unlocked yet
+		if readCount == read1BookThreshold /* && !isAchievementUnlocked(userID, read1BookAchievementObjectID) */ {
+			// Simulate getting achievement details (from a list or DB) and marking as unlocked
+			unlockedAchievement = &AchievementResponse{
+				ID: read1BookAchievementObjectID.Hex(), // Convert ObjectID to string for frontend
+				Name: "First Read",
+				Description: "Read your first book",
+			}
+			println("User", userID.Hex(), "unlocked achievement:", unlockedAchievement.Name)
+			// In a real app: Save this achievement (read1BookAchievementObjectID) as unlocked for the user in DB.
+
+		// Simulate checking and unlocking "Bookworm Beginner" ONLY if "First Read" wasn't just unlocked in this call
+		} else if unlockedAchievement == nil && readCount >= read10BooksThreshold /* && !isAchievementUnlocked(userID, read10BooksAchievementObjectID) */ {
+            // Simulate getting achievement details and marking as unlocked
+            unlockedAchievement = &AchievementResponse{
+                ID: read10BooksAchievementObjectID.Hex(), // Convert ObjectID to string
+                Name: "Bookworm Beginner",
+                Description: "Read 10 books",
+            }
+             println("User", userID.Hex(), "unlocked achievement:", unlockedAchievement.Name)
+             // In a real app: Save this achievement (read10BooksAchievementObjectID) as unlocked for the user in DB.
+        }
+
+		// --- End Achievement Logic --- //
+
+		// Include achievement in the response if an achievement was unlocked in this request
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Mark updated successfully",
+			"achievement": unlockedAchievement, // This will be null if no achievement was unlocked in this call
+		})
+		return // Return after sending response
+	}
+
+	// If status is not "read", send standard response for Update
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Mark updated successfully",
 	})
@@ -275,6 +420,7 @@ func DeleteMark(c *gin.Context) {
 		return
 	}
 
+	// ลบ mark
 	_, err = collection.DeleteOne(context.TODO(), bson.M{"_id": markID})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete mark"})

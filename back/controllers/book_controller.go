@@ -4,12 +4,15 @@ import (
 	"back/config"
 	"back/models"
 	"context"
+	"math"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 )
 
 func CreateBook(c *gin.Context) {
@@ -320,4 +323,96 @@ func DeleteBook(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Book deleted successfully"})
+}
+
+// GetRecommendedBooks returns books with high ratings
+func GetRecommendedBooks(c *gin.Context) {
+	log.Println("Getting recommended books...")
+	
+	pipeline := mongo.Pipeline{
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "reviews"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "book_id"},
+			{Key: "as", Value: "reviews"},
+		}}},
+		{{Key: "$addFields", Value: bson.D{
+			{Key: "avg_rating", Value: bson.D{
+				{Key: "$avg", Value: "$reviews.rating"},
+			}},
+			{Key: "review_count", Value: bson.D{
+				{Key: "$size", Value: "$reviews"},
+			}},
+		}}},
+		{{Key: "$match", Value: bson.D{
+			{Key: "review_count", Value: bson.D{
+				{Key: "$gt", Value: 0},
+			}},
+		}}},
+		{{Key: "$sort", Value: bson.D{
+			{Key: "avg_rating", Value: -1},
+			{Key: "review_count", Value: -1},
+		}}},
+		{{Key: "$limit", Value: 6}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 1},
+			{Key: "title", Value: 1},
+			{Key: "author", Value: 1},
+			{Key: "coverImage", Value: 1},
+			{Key: "description", Value: 1},
+			{Key: "avg_rating", Value: 1},
+			{Key: "review_count", Value: 1},
+		}}},
+	}
+
+	log.Println("Executing aggregation pipeline...")
+	collection := config.DB.Database("bookwarm").Collection("books")
+	if collection == nil {
+		log.Println("Error: Collection is nil")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database collection not found"})
+		return
+	}
+
+	cursor, err := collection.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		log.Printf("Error in aggregation: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch recommended books"})
+		return
+	}
+	defer cursor.Close(context.Background())
+
+	var recommendedBooks []bson.M
+	if err = cursor.All(context.TODO(), &recommendedBooks); err != nil {
+		log.Printf("Error decoding recommended books: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding recommended books", "details": err.Error()})
+		return
+	}
+
+	log.Printf("Found %d recommended books", len(recommendedBooks))
+
+	// Convert ObjectIDs to strings and round average rating
+	for _, book := range recommendedBooks {
+		if id, ok := book["_id"]; ok {
+			if oid, isOID := id.(primitive.ObjectID); isOID {
+				book["_id"] = oid.Hex()
+			}
+		}
+
+		// Log the cover_image value
+		if coverImage, ok := book["coverImage"]; ok {
+			log.Printf("Book %s cover_image: %v", book["_id"], coverImage)
+		} else {
+			log.Printf("Book %s cover_image: nil or not found", book["_id"])
+		}
+
+		if avgRating, ok := book["avg_rating"].(float64); ok {
+			book["avg_rating"] = math.Round(avgRating*10) / 10
+		} else if avgRating, ok := book["avg_rating"].(int32); ok {
+			book["avg_rating"] = float64(avgRating)
+		} else {
+			book["avg_rating"] = 0.0
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"books": recommendedBooks})
 }

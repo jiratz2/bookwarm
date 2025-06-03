@@ -10,8 +10,12 @@ import (
 func ClubRoutes(router *gin.Engine){
 	club := router.Group("/api/club")
 	{
-		club.GET("/", controllers.GetAllClubs)
-		club.GET("/:id", controllers.GetClubByID)
+		// 🌍 Public routes - ทุกคนเข้าได้ (ไม่ต้อง auth)
+		club.GET("/", controllers.GetAllClubs) // ดูคลับทั้งหมด
+		club.GET("/:id", controllers.GetClubByID) // ดูคลับตาม ID
+		club.GET("/recommended", controllers.GetRecommendedClubs) // ดูคลับแนะนำ
+		
+		// 🔒 Protected routes - ต้อง login และเป็นสมาชิก
 		club.Use(middleware.JWTAuthMiddleware()).POST("/", controllers.CreateClub)
 		club.Use(middleware.JWTAuthMiddleware()).POST("/:id/join", controllers.JoinClub)
 		club.Use(middleware.JWTAuthMiddleware()).POST("/:id/leave", controllers.LeaveClub)

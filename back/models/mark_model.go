@@ -6,7 +6,7 @@ import (
 )
 
 type Mark struct {
-	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	ID        primitive.ObjectID `json:"_id" bson:"_id,omitempty"`
 	BookID    primitive.ObjectID `json:"book_id" bson:"book_id"`
 	UserID    primitive.ObjectID `json:"user_id" bson:"user_id"`
 	Status    string             `json:"status" bson:"status"` // "want to read", "now reading", "read", "did not finish"

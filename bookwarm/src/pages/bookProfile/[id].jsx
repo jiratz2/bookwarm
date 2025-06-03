@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { jwtDecode } from "jwt-decode";
-import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ReviewSection from "@/components/ReviewSection";
 import MarkButton from "@/components/MarkButton";
+import Toast from "@/components/Toast";
 
 const BookProfilePage = () => {
   const router = useRouter();
@@ -14,6 +14,8 @@ const BookProfilePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [averageRating, setAverageRating] = useState(0);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   // ตรวจสอบ token
   useEffect(() => {
@@ -24,7 +26,6 @@ const BookProfilePage = () => {
         setCurrentUser(decoded.username || decoded.name || decoded.displayName);
       } catch (err) {
         console.error("Failed to decode token:", err);
-        toast.error("Invalid token format. Please log in again.");
       }
     }
   }, []);
@@ -46,7 +47,6 @@ const BookProfilePage = () => {
         setBook(data);
       } catch (err) {
         console.error("Failed to fetch book data:", err);
-        toast.error("ไม่สามารถโหลดข้อมูลหนังสือได้");
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,6 @@ const BookProfilePage = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto mt-20">
-      <ToastContainer/>
       {/* ส่วนหัว */}
       <div className="flex gap-6 mb-8">
         <img
@@ -146,7 +145,7 @@ const BookProfilePage = () => {
             <span className="text-gray-600">Rating: {averageRating.toFixed(1)}</span>
           </div>
 
-          <MarkButton bookId={id} user={currentUser}/>
+          <MarkButton bookId={id} user={currentUser} bookTitle={book.title} />
 
           {/* แท็ก */}
           <div className="flex flex-wrap gap-2 mt-4">
@@ -196,6 +195,15 @@ const BookProfilePage = () => {
       <div className="border-t pt-8">
         <ReviewSection bookId={id} user={currentUser} onAverageRatingUpdate={handleAverageRatingUpdate}/>
       </div>
+
+      {/* Custom Toast for achievements */}
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          onClose={() => setShowToast(false)}
+          duration={5000}
+        />
+      )}
     </div>
   );
 };

@@ -113,6 +113,9 @@ export default function Profile() {
 
       if (res.ok) {
         const data = await res.json();
+        console.log("Clubs data:", data); // Debug log
+        console.log("First club data:", data[0]); // Debug first club
+        console.log("Club ID type:", typeof data[0]?._id); // Debug ID type
         setUserClubs(data);
       } else {
         toast.error("Failed to fetch user's clubs.");
@@ -150,6 +153,47 @@ export default function Profile() {
     return null;
   };
 
+  // Helper function to render user avatar (profile picture or initial)
+  const renderUserAvatar = (profileImgUrl, displayName) => {
+    const getCorrectImageUrl = (imgUrl) => {
+      if (!imgUrl) return null;
+      if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+        return imgUrl;
+      }
+      if (imgUrl.startsWith('/')) {
+        return `http://localhost:8080${imgUrl}`;
+      }
+      return `http://localhost:8080/${imgUrl}`;
+    };
+
+    if (profileImgUrl) {
+      return (
+        <img
+          src={getCorrectImageUrl(profileImgUrl)}
+          alt={displayName || "User"}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            // Fallback to initial placeholder if image fails to load
+            const parentDiv = e.target.closest('.w-40.h-40.rounded-full');
+            if (parentDiv) {
+               const initialDiv = parentDiv.querySelector('.w-full.h-full.bg-gradient-to-r'); // Adjust selector if needed
+               if (initialDiv) initialDiv.style.display = 'flex';
+            }
+          }}
+        />
+      );
+    }
+
+    // Placeholder with initial
+    const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
+    return (
+      <div className="w-full h-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-6xl">
+        {initial}
+      </div>
+    );
+  };
+
   return (
     <div className="mt-[100px] max-w-screen mx-auto bg-white min-h-screen">
       <ToastContainer />
@@ -171,16 +215,11 @@ export default function Profile() {
             <div className="absolute left-1/2 transform -translate-x-1/2 md:left-32 md:translate-x-0 -bottom-20">
               <div className="relative">
                 <div className="w-40 h-40 rounded-full border-4 border-white overflow-hidden">
+                  {/* Use renderUserAvatar to display profile pic or initial */}
                   {isLoading ? (
                     <div className="w-full h-full bg-gray-300 animate-pulse" />
-                  ) : profilePicture ? (
-                    <img
-                      src={profilePicture}
-                      alt="Profile picture"
-                      className="w-full h-full object-cover"
-                    />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-gray-300 to-gray-400" />
+                    renderUserAvatar(profilePicture, displayName)
                   )}
                 </div>
               </div>
@@ -205,37 +244,26 @@ export default function Profile() {
       </div>
 
       <div className="mx-[140px] mt-30 font-bold text-xl">
-        <h2>Reading stats</h2>
-        <div className="flex justify-evenly py-15">
-          <div className="reading-stats">
-            <p>0</p>
-            <h3>Books read</h3>
-          </div>
-          <div className="reading-stats">
-            <p>0</p>
-            <h3>Authors</h3>
-          </div>
-          <div className="reading-stats">
-            <p>0</p>
-            <h3>Club joined</h3>
-          </div>
-          <div className="reading-stats">
-            <p>0</p>
-            <h3>Archievements</h3>
-          </div>
-        </div>
 
         <div className="flex justify-between ">
           <h2>Book shelf</h2>
-          <Link href="/bookshelf"><h2 className="text-blue-600 hover:underline">Show all</h2></Link>
         </div>
-        <div className="flex overflow-x-auto space-x-4 py-5">
-          {markedBooks.length > 0 ? (
-            markedBooks.slice(0, 5).map((mark) => (
-              <BookCover key={mark._id} book={mark.book} />
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-1 py-2">
+          {markedBooks && markedBooks.length > 0 ? (
+            markedBooks.map((mark) => (
+              <Link key={mark._id} href={`/book/${mark.book._id}`}>
+                <div className="flex flex-col cursor-pointer">
+                  <div className="transform hover:scale-105 transition-transform duration-200">
+                    <BookCover book={mark.book} />
+                  </div>
+                </div>
+              </Link>
             ))
           ) : (
-            <p className="text-gray-500 text-base">No books marked yet.</p>
+            <div className="col-span-full text-center py-8">
+              <p className="text-gray-500 text-lg">No books marked yet.</p>
+              <p className="text-gray-400 text-sm mt-2">Start exploring books and add them to your bookshelf!</p>
+            </div>
           )}
         </div>
 
@@ -244,31 +272,28 @@ export default function Profile() {
           {/* Link to show all clubs will go here later */}
         </div>
         <div className="flex overflow-x-auto space-x-4 py-5">
-          {userClubs.length > 0 ? (
-            userClubs.slice(0, 5).map((club) => (
-              <Link key={club._id} href={`/club/${club._id}`}>
-                <div className="w-24 h-36 md:w-32 md:h-48 lg:w-40 lg:h-60 flex-shrink-0 rounded-md overflow-hidden shadow-lg cursor-pointer">
-                   <img
-                      src={getImageUrl(club.cover_image)}
-                      alt={club.name || "Club Cover"}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover";
-                      }}
-                    />
-                </div>
-              </Link>
-            ))
+          {userClubs && userClubs.length > 0 ? (
+            userClubs.slice(0, 5).map((club) => {
+              console.log("Club data:", club); // Debug individual club
+              return (
+                <Link key={club.id || club._id} href={`/club/${club.id || club._id}`}>
+                  <div className="w-24 h-36 md:w-32 md:h-48 lg:w-40 lg:h-60 flex-shrink-0 rounded-md overflow-hidden shadow-lg cursor-pointer">
+                     <img
+                        src={getImageUrl(club.cover_image)}
+                        alt={club.name || "Club Cover"}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover";
+                        }}
+                      />
+                  </div>
+                </Link>
+              );
+            })
           ) : (
             <p className="text-gray-500 text-base">No clubs joined yet.</p>
           )}
         </div>
-
-        <div className="flex justify-between mt-8">
-          <h2>Archievements</h2>
-          <h2>Show all</h2>
-        </div>
-        <div className="bg-gray-600 w-[130px] h-[130px] my-5"></div>
       </div>
     </div>
   );
