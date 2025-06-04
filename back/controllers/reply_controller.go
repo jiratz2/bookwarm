@@ -38,6 +38,21 @@ func CreateReply(c *gin.Context) {
 		return
 	}
 
+	// Get the post to check club membership
+	postCollection := config.DB.Database("bookwarm").Collection("post")
+	var post models.Post
+	err = postCollection.FindOne(context.TODO(), bson.M{"_id": postID}).Decode(&post)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	// Check if user is a club member
+	if !isClubMember(userID, post.ClubID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only club members can reply to posts"})
+		return
+	}
+
 	reply := models.Reply{
 		ID:        primitive.NewObjectID(),
 		PostID:    postID,

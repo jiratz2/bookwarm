@@ -476,3 +476,23 @@ func GetRecommendedClubs(c *gin.Context) {
 	log.Println("Successfully processed clubs data")
 	c.JSON(http.StatusOK, gin.H{"clubs": clubs})
 }
+
+// CheckMembership checks if the current user is a member of the club
+func CheckMembership(c *gin.Context) {
+	clubIDHex := c.Param("id")
+	clubID, err := primitive.ObjectIDFromHex(clubIDHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid club ID"})
+		return
+	}
+
+	userIDStr := c.MustGet("userId").(string)
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	isMember := isClubMember(userID, clubID)
+	c.JSON(http.StatusOK, gin.H{"isMember": isMember})
+}

@@ -113,16 +113,15 @@ export default function Profile() {
 
       if (res.ok) {
         const data = await res.json();
-        console.log("Clubs data:", data); // Debug log
-        console.log("First club data:", data[0]); // Debug first club
-        console.log("Club ID type:", typeof data[0]?._id); // Debug ID type
-        setUserClubs(data);
+        setUserClubs(Array.isArray(data) ? data : []);
       } else {
         toast.error("Failed to fetch user's clubs.");
+        setUserClubs([]);
       }
     } catch (error) {
       toast.error("Error fetching user's clubs.");
       console.error("Fetch user's clubs error:", error);
+      setUserClubs([]);
     }
   };
 

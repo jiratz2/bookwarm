@@ -93,7 +93,7 @@ const ClubProfile = () => {
       toast.error("You need to be logged in to join a club.");
       setTimeout(() => {
         router.push("/login");
-      }, 3000); // รอ 2 วินาที (2000 มิลลิวินาที)
+      }, 3000);
       return;
     }
 
@@ -107,6 +107,8 @@ const ClubProfile = () => {
       if (res.ok) {
         toast.success("Joined club!");
         fetchClubs();
+        // Refresh the page after joining
+        window.location.reload();
       } else {
         toast.error("Failed to join club.");
       }
@@ -127,6 +129,8 @@ const ClubProfile = () => {
       if (res.ok) {
         toast.success("Left club.");
         fetchClubs();
+        // Refresh the page after leaving
+        window.location.reload();
       } else {
         toast.error("Failed to leave club.");
       }

@@ -222,6 +222,7 @@ func GetAllReviews(c *gin.Context) {
 			"user_profile_pic":  "$user.profile_img_url",
 			"user_username":     "$user.username",
 			"user_email":        "$user.email",
+			"user_id":           "$user._id",
 		}}},
 
 		bson.D{{Key: "$sort", Value: bson.M{"review_date": -1}}},

@@ -9,6 +9,30 @@ const Post = ({ clubId }) => {
   const [showReplyForm, setShowReplyForm] = useState({});
   const [replies, setReplies] = useState({});
   const [replyContent, setReplyContent] = useState({});
+  const [isClubMember, setIsClubMember] = useState(false);
+
+  // Check if user is a club member
+  const checkClubMembership = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !clubId) return;
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/club/${clubId}/check-membership`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      setIsClubMember(response.ok && data.isMember);
+    } catch (err) {
+      console.error("Error checking club membership:", err);
+      setIsClubMember(false);
+    }
+  };
+
+  useEffect(() => {
+    checkClubMembership();
+  }, [clubId]);
 
   // ดึงโพสต์ทั้งหมดของคลับ
   const fetchPosts = async () => {
@@ -142,13 +166,21 @@ const Post = ({ clubId }) => {
       return;
     }
     try {
-      await fetch(`http://localhost:8080/api/reply/post/${postId}/reply`, {
+      const response = await fetch(`http://localhost:8080/api/reply/post/${postId}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ content: replyContent[postId] }),
       });
-      setReplyContent(prev => ({ ...prev, [postId]: "" }));
-      fetchReplies(postId);
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setReplyContent(prev => ({ ...prev, [postId]: "" }));
+        fetchReplies(postId);
+        toast.success("Reply posted successfully");
+      } else {
+        toast.error(data.error || "Failed to post reply");
+      }
     } catch (err) {
       toast.error("Network error");
     }
@@ -479,16 +511,20 @@ const Post = ({ clubId }) => {
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              setShowReplyForm(prev => ({ ...prev, [post._id]: !prev[post._id] }));
-              if (!replies[post._id]) fetchReplies(post._id);
-            }}
-            className="m-2"
-          >
-            ตอบกลับ
-          </button>
-          {typeof window !== "undefined" && localStorage.getItem("token") && showReplyForm[post._id] && (
+          {/* Only show reply button for club members */}
+          {isClubMember && (
+            <button
+              onClick={() => {
+                setShowReplyForm(prev => ({ ...prev, [post._id]: !prev[post._id] }));
+                if (!replies[post._id]) fetchReplies(post._id);
+              }}
+              className="m-2"
+            >
+              ตอบกลับ
+            </button>
+          )}
+
+          {typeof window !== "undefined" && localStorage.getItem("token") && showReplyForm[post._id] && isClubMember && (
             <form onSubmit={e => { e.preventDefault(); handleReply(post._id); }} className="mt-4 flex items-center space-x-2">
               <textarea
                 value={replyContent[post._id] || ""}

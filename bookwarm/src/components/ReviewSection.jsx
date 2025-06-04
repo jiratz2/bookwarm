@@ -21,9 +21,9 @@ const ReviewSection = ({ bookId, onAverageRatingUpdate }) => {
       try {
         const decoded = jwtDecode(token);
         console.log("Decoded token (initial effect):", decoded);
-        const userIdentifier = decoded.displayname;
+        const userIdentifier = decoded.id || decoded._id;
         setCurrentUser(userIdentifier);
-        console.log("Current user set to (initial effect):", userIdentifier);
+        console.log("Current user ID set to (initial effect):", userIdentifier);
       } catch (err) {
         console.error("Token decode error (initial effect):", err);
         toast.error("Invalid token");
@@ -62,44 +62,52 @@ const ReviewSection = ({ bookId, onAverageRatingUpdate }) => {
         setAverage(newAverage);
         onAverageRatingUpdate?.(newAverage);
 
-        // แยกรีวิวของผู้ใช้และรีวิวของคนอื่น
+        // แยกรีวิวของผู้ใช้และรีวิวของคนอื่นโดยใช้ User ID
         const token = localStorage.getItem("token");
+        let currentUserId = null;
         if (token) {
           try {
             const decoded = jwtDecode(token);
+            currentUserId = decoded.id || decoded._id;
             console.log("🔑 Decoded token:", decoded);
-
-            const userIdentifier = decoded.displayname;
-            console.log("👤 User displayname from token:", userIdentifier);
-            console.log("📝 All unique reviews:", uniqueReviews);
-
-            // แยกรีวิวของผู้ใช้และคนอื่น
-            const userReviewFound = uniqueReviews.find(r => r.reviewer_name === userIdentifier);
-            const othersReviews = uniqueReviews.filter(r => r.reviewer_name !== userIdentifier);
-
-            if (userReviewFound) {
-              setUserReview(userReviewFound);
-              setHasReviewed(true);
-              console.log("✅ User review found:", userReviewFound);
-            } else {
-              setUserReview(null);
-              setHasReviewed(false);
-              console.log("❌ No user review found");
-            }
-
-            setOtherReviews(othersReviews);
-            console.log("👥 Other reviews:", othersReviews);
+            console.log("👤 Current user ID from token:", currentUserId);
           } catch (err) {
             console.error("❌ Token decode error:", err);
-            setHasReviewed(false);
-            setUserReview(null);
-            setOtherReviews(uniqueReviews);
+            // ถ้า Token มีปัญหา ให้ถือว่าไม่ได้ Login และไม่หารีวิวของผู้ใช้
+            currentUserId = null;
           }
-        } else {
-          setHasReviewed(false);
-          setUserReview(null);
-          setOtherReviews(uniqueReviews);
         }
+
+        let userReviewFound = null;
+        let othersReviews = [];
+
+        if (currentUserId) {
+            // พยายามหารีวิวของผู้ใช้จากรายการทั้งหมดที่ได้มา
+            userReviewFound = uniqueReviews.find(r => r.user_id === currentUserId);
+            // ถ้ารีวิวของผู้ใช้ถูกพบ ให้เอารีวิวของผู้ใช้ออกจากรายการ otherReviews
+            othersReviews = uniqueReviews.filter(r => r.user_id !== currentUserId);
+
+            if (userReviewFound) {
+                setUserReview(userReviewFound);
+                setHasReviewed(true);
+                console.log("✅ User review found:", userReviewFound);
+            } else {
+                // ถ้ารีวิวของผู้ใช้ไม่ถูกพบในรายการ (แต่ Login อยู่)
+                setUserReview(null);
+                setHasReviewed(false);
+                console.log("❌ No user review found with ID", currentUserId, "in the fetched list.");
+            }
+        } else {
+            // ถ้าไม่ได้ Login ให้ถือว่าทุกรีวิวเป็นของคนอื่น
+            setUserReview(null);
+            setHasReviewed(false);
+            othersReviews = uniqueReviews;
+             console.log("🔒 Not logged in. All reviews are treated as others.");
+        }
+        
+        setOtherReviews(othersReviews); // อัปเดต state ของรีวิวคนอื่น
+        console.log("👥 Other reviews (after separating user's):", othersReviews);
+
       } catch (err) {
         console.error("❌ Failed to load reviews:", err);
         setError(err.message || "Failed to load reviews");
@@ -116,6 +124,11 @@ const ReviewSection = ({ bookId, onAverageRatingUpdate }) => {
   useEffect(() => {
     setHasReviewed(false);
     setUserReview(null);
+    // Also reset reviews and otherReviews to avoid showing old data while loading new book
+    setReviews([]);
+    setOtherReviews([]);
+    setAverage(0);
+    onAverageRatingUpdate?.(0);
   }, [bookId]);
 
   const handleRating = (value) => setRating(value);

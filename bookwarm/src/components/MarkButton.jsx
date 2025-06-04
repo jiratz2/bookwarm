@@ -10,8 +10,8 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
 
   const validStatuses = [
     { label: "Want to Read", value: "want to read" },
-    { label: "Currently Reading", value: "now reading" },
-    { label: "Read", value: "read" },
+    { label: "Now Reading", value: "now reading" },
+    { label: "Finished Reading", value: "read" },
     { label: "Did Not Finish", value: "did not finish" },
   ];
 
@@ -166,13 +166,31 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
     }
   };
 
-  const buttonClass = currentStatus 
-    ? "bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-md text-sm transition flex items-center gap-2"
-    : "bg-blue-800 hover:bg-blue-700 text-white px-6 py-3 rounded-md text-sm hover:bg-blue-700 transition flex items-center gap-2";
+  const getStatusLabel = (statusValue) => {
+    const status = validStatuses.find(s => s.value === statusValue);
+    return status ? status.label : "Mark as";
+  };
 
-    if (isLoading) {
-      return <div className="mt-6">Loading...</div>;
+  const getButtonColor = (status) => {
+    switch (status) {
+      case "want to read":
+        return "bg-blue-500 hover:bg-blue-600";
+      case "now reading":
+        return "bg-yellow-500 hover:bg-yellow-600";
+      case "read":
+        return "bg-green-500 hover:bg-green-600";
+      case "did not finish":
+        return "bg-red-500 hover:bg-red-600";
+      default:
+        return "bg-blue-800 hover:bg-blue-700";
     }
+  };
+
+  const buttonClass = `text-white px-6 py-3 rounded-md text-sm transition flex items-center gap-2 ${getButtonColor(currentStatus)}`;
+
+  if (isLoading) {
+    return <div className="mt-6">Loading...</div>;
+  }
 
   return (
     <div className="relative mt-6 dropdown-container">
@@ -180,7 +198,7 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
         className={buttonClass}
         onClick={toggleDropdown}
       >
-        {currentStatus || "Mark as"}
+        {getStatusLabel(currentStatus)}
         <span
           className={`transform transition-transform duration-200 ${
             isDropdownOpen ? "rotate-180" : ""

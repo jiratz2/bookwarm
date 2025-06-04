@@ -221,12 +221,6 @@ func ToggleLikePost(c *gin.Context) {
 		return
 	}
 
-	// ตรวจสอบว่าเป็นสมาชิกของ club หรือไม่
-	if !isClubMember(userID, post.ClubID) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You are not a member of this club"})
-		return
-	}
-
 	// ตรวจสอบว่าเคยไลก์แล้วหรือยัง
 	liked := false
 	for _, id := range post.Likes {
@@ -249,14 +243,11 @@ func ToggleLikePost(c *gin.Context) {
 		return
 	}
 
-	action := "liked"
+	message := "Post liked"
 	if liked {
-		action = "unliked"
+		message = "Post unliked"
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Post " + action,
-		"liked": !liked,
-	})
+	c.JSON(http.StatusOK, gin.H{"message": message})
 }
 
 func DeletePost(c *gin.Context) {
@@ -361,9 +352,9 @@ func GetRandomPosts(c *gin.Context) {
 			{Key: "club_name", Value: "$club.name"},
 		}}},
 
-		// Randomly sample 6 posts
+		// Randomly sample 10 posts
 		bson.D{{Key: "$sample", Value: bson.D{
-			{Key: "size", Value: 6},
+			{Key: "size", Value: 10},
 		}}},
 	}
 
