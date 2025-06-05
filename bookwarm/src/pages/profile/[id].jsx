@@ -205,6 +205,10 @@ export default function UserProfilePage() {
 
   const isCurrentUserProfile = currentUserId && userData && currentUserId === userData._id;
 
+  console.log("Debug: currentUserId", currentUserId);
+  console.log("Debug: userData", userData);
+  console.log("Debug: isCurrentUserProfile", isCurrentUserProfile);
+
   return (
     <div className="mt-[100px] max-w-screen mx-auto bg-white min-h-screen">
       <ToastContainer />
@@ -236,7 +240,7 @@ export default function UserProfilePage() {
               {isCurrentUserProfile && (
                 <div>
                   <div className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 mt-5 rounded-md text-lg hover:cursor-pointer font-bold">
-                    <Link href="/editprofile">
+                    <Link href={`/editprofile`}>
                       Edit profile
                     </Link>
                   </div>

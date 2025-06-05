@@ -264,6 +264,7 @@ func GetUserProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
+		"_id": user.ID.Hex(),
 		"displayname":     user.DisplayName,
 		"profile_img_url": user.ProfilePic,
 		"bg_img_url":      user.BgImgURL,
