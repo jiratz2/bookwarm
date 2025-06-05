@@ -529,5 +529,6 @@ func GetClubsByUserID(c *gin.Context) {
 		return
 	}
 
+	log.Printf("Fetched %d clubs for user ID %s\n", len(clubs), userId)
 	c.JSON(http.StatusOK, clubs)
 }

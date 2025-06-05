@@ -5,19 +5,53 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Users } from "lucide-react";
 import BookCover from "@/components/BookCover";
+import { jwtDecode } from "jwt-decode";
 
-export default function UserProfile() {
+export default function UserProfilePage() {
   const router = useRouter();
   const { id } = router.query;
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [markedBooks, setMarkedBooks] = useState([]);
   const [userClubs, setUserClubs] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [profileUserId, setProfileUserId] = useState(null);
 
-  const fetchUserProfile = async (userId) => {
+  useEffect(() => {
+    if (id) {
+      setProfileUserId(id);
+    } else {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          const loggedInUserId = decoded.id || decoded._id;
+          setCurrentUserId(loggedInUserId);
+          setProfileUserId(loggedInUserId);
+        } catch (err) {
+          console.error("Failed to decode token:", err);
+          setIsLoading(false);
+        }
+      } else {
+        console.error("No token found and no user ID in URL.");
+        setIsLoading(false);
+      }
+    }
+  }, [id, router.isReady]);
+
+  useEffect(() => {
+    if (profileUserId) {
+      fetchUserProfile(profileUserId);
+      fetchUserBooks(profileUserId);
+      fetchUserClubs(profileUserId);
+    }
+  }, [profileUserId]);
+
+  const fetchUserProfile = async (userIdToFetch) => {
+    setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8080/api/user/${userId}`, {
+      const res = await fetch(`http://localhost:8080/api/user/${userIdToFetch}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -27,6 +61,8 @@ export default function UserProfile() {
       if (res.ok) {
         const data = await res.json();
         setUserData(data);
+      } else if (res.status === 404) {
+        setUserData(null);
       } else {
         toast.error("Failed to fetch user profile");
       }
@@ -38,11 +74,12 @@ export default function UserProfile() {
     }
   };
 
-  const fetchUserBooks = async (userId) => {
+  const fetchUserBooks = async (userIdToFetch) => {
+    if (!userIdToFetch) return;
     try {
-      console.log(`Fetching books for user ID: ${userId}`);
+      console.log(`Fetching books for user ID: ${userIdToFetch}`);
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8080/api/marks/user/${id}/marks`, {
+      const res = await fetch(`http://localhost:8080/api/marks/user/${userIdToFetch}/marks`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -55,16 +92,19 @@ export default function UserProfile() {
         setMarkedBooks(data);
       } else {
         console.error(`Failed to fetch marked books. Status: ${res.status}`);
+        setMarkedBooks([]);
       }
     } catch (error) {
       console.error("Error fetching user's books:", error);
+      setMarkedBooks([]);
     }
   };
 
-  const fetchUserClubs = async (userId) => {
+  const fetchUserClubs = async (userIdToFetch) => {
+    if (!userIdToFetch) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8080/api/club/user/${userId}`, {
+      const res = await fetch(`http://localhost:8080/api/club/user/${userIdToFetch}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -73,39 +113,31 @@ export default function UserProfile() {
 
       if (res.ok) {
         const data = await res.json();
+        console.log("Fetched user clubs data:", data);
         setUserClubs(Array.isArray(data) ? data : []);
+      } else {
+        setUserClubs([]);
       }
     } catch (error) {
       console.error("Error fetching user's clubs:", error);
+      setUserClubs([]);
     }
   };
-
-  useEffect(() => {
-    if (id) {
-      fetchUserProfile(id);
-      fetchUserBooks(id);
-      fetchUserClubs(id);
-    }
-  }, [id]);
 
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) return null;
-    
-    // ถ้าเป็น URL เต็ม (https://...) ใช้เลย
+
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
     }
-    
-    // ถ้าเป็น path ภายใน ให้เติม host
+
     if (imageUrl.startsWith('/uploads/')) {
       return `http://localhost:8080${imageUrl}`;
     }
-    
-    // ถ้าเป็นแค่ชื่อไฟล์ ให้เติม path
+
     return `http://localhost:8080/uploads/${imageUrl}`;
   };
 
-  // Helper function to render user avatar (profile picture or initial)
   const renderUserAvatar = (profileImgUrl, displayName) => {
     const getCorrectImageUrl = (imgUrl) => {
       if (!imgUrl) return null;
@@ -115,7 +147,7 @@ export default function UserProfile() {
       if (imgUrl.startsWith('/')) {
         return `http://localhost:8080${imgUrl}`;
       }
-      return `http://localhost:8080/${imgUrl}`;
+      return `http://localhost:8080/uploads/${imgUrl}`;
     };
 
     if (profileImgUrl) {
@@ -126,18 +158,16 @@ export default function UserProfile() {
           className="w-full h-full object-cover"
           onError={(e) => {
             e.target.style.display = 'none';
-            // Fallback to initial placeholder if image fails to load
             const parentDiv = e.target.closest('.w-40.h-40.rounded-full');
             if (parentDiv) {
-               const initialDiv = parentDiv.querySelector('.w-full.h-full.bg-gradient-to-r'); // Adjust selector if needed
-               if (initialDiv) initialDiv.style.display = 'flex';
+              const initialDiv = parentDiv.querySelector('.w-full.h-full.bg-gradient-to-r');
+              if (initialDiv) initialDiv.style.display = 'flex';
             }
           }}
         />
       );
     }
 
-    // Placeholder with initial
     const initial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
     return (
       <div className="w-full h-full bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-6xl">
@@ -173,6 +203,8 @@ export default function UserProfile() {
     );
   }
 
+  const isCurrentUserProfile = currentUserId && userData && currentUserId === userData._id;
+
   return (
     <div className="mt-[100px] max-w-screen mx-auto bg-white min-h-screen">
       <ToastContainer />
@@ -201,15 +233,21 @@ export default function UserProfile() {
                 <h1 className="text-3xl font-bold uppercase">{userData.displayname}</h1>
                 <p className="text-gray-600 mt-1 text-lg max-w-5xl">{userData.bio}</p>
               </div>
+              {isCurrentUserProfile && (
+                <div>
+                  <div className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 mt-5 rounded-md text-lg hover:cursor-pointer font-bold">
+                    <Link href="/editprofile">
+                      Edit profile
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Adjusted main content container for consistency */}
       <div className="mx-[140px] mt-30 font-bold text-xl">
-
-        {/* Bookshelf Section */}
         <div className="mb-12">
           <div className="flex justify-between">
             <h2>Book shelf</h2>
@@ -236,38 +274,25 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* Clubs Section */}
         <div className="mb-12">
-          {/* Adjusted heading structure and margin */}
           <div className="flex justify-between mt-8 mb-3">
-             <h2>Clubs</h2>
+            <h2>Clubs</h2>
           </div>
-          {/* Update to horizontal flex scroll layout */}
-          {/* Revert grid layout back to flex for horizontal scroll */}
-          <div className="flex overflow-x-auto space-x-4 py-5"> {/* Changed from grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 py-5">
             {userClubs.length > 0 ? (
               userClubs.map((club) => {
                 console.log("Club ID for key:", club.id);
                 return (
-                  <Link key={club.id} href={`/club/${club.id}`} className="transform hover:scale-105 transition-transform duration-200 cursor-pointer flex-shrink-0"> {/* Add flex-shrink-0 here */}
-                    {/* Container div for image and name, using flex column */}
-                    <div className="flex flex-col items-center w-24 md:w-32 lg:w-40"> {/* Adjust width as needed, flex column */}
-                      {/* Image container */}
-                      <div className="w-full h-24 md:h-32 lg:h-40 rounded-md overflow-hidden shadow-lg"> {/* Adjust height/width relative to parent flex item */}
-                        <img
-                          src={getImageUrl(club.cover_image) || "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover"}
-                          alt={club.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover";
-                          }}
-                        />
-                      </div>
-                      {/* Club Name */}
-                      <div className="mt-2 text-sm text-center text-gray-700 font-medium w-full"> {/* Styling for the name */}
-                        {/* Added break-words to allow long words to break */}
-                         <p className="break-words">{club.name}</p>
-                      </div>
+                  <Link key={club.id} href={`/club/${club.id}`} className="cursor-pointer">
+                    <div className="w-24 h-36 md:w-32 md:h-48 lg:w-40 lg:h-60 rounded-md overflow-hidden shadow-lg transform hover:scale-105 transition-transform duration-200">
+                      <img
+                        src={getImageUrl(club.cover_image) || "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover"}
+                        alt={club.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover";
+                        }}
+                      />
                     </div>
                   </Link>
                 );

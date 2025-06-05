@@ -456,9 +456,12 @@ const Post = ({ clubId }) => {
               </div>
               
               <div>
-                <h4 className="font-semibold text-gray-900 text-lg">
-                  {post.user_display_name || post.user_username || "Unknown User"}
-                </h4>
+                {/* Wrap username in Link */}
+                <Link href={`/profile/${post.user_id}`} className="cursor-pointer hover:underline">
+                  <h4 className="font-semibold text-gray-900 text-lg">
+                    {post.user_display_name || post.user_username || "Unknown User"}
+                  </h4>
+                </Link>
                 {/* แสดง username ถ้ามี display_name */}
                 {post.user_display_name && post.user_username && (
                   <p className="text-sm text-gray-500">@{post.user_username}</p>
@@ -595,7 +598,12 @@ const Post = ({ clubId }) => {
                 )}
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-gray-900 text-base">{reply.user_display_name || reply.user_username || "Unknown User"}</span>
+                    {/* Wrap username in Link */}
+                    <Link href={`/profile/${reply.user_id}`} className="cursor-pointer hover:underline">
+                      <span className="font-semibold text-gray-900 text-base">
+                        {reply.user_display_name || reply.user_username || "Unknown User"}
+                      </span>
+                    </Link>
                     {reply.user_username && (
                       <span className="text-xs text-gray-500">@{reply.user_username}</span>
                     )}
