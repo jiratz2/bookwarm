@@ -174,13 +174,13 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
   const getButtonColor = (status) => {
     switch (status) {
       case "want to read":
-        return "bg-blue-500 hover:bg-blue-600";
+        return "bg-blue-500 hover:bg-blue-700";
       case "now reading":
-        return "bg-yellow-500 hover:bg-yellow-600";
+        return "bg-pink-600 hover:bg-pink-700";
       case "read":
         return "bg-green-500 hover:bg-green-600";
       case "did not finish":
-        return "bg-red-500 hover:bg-red-600";
+        return "bg-red-600 hover:bg-red-700";
       default:
         return "bg-blue-800 hover:bg-blue-700";
     }
