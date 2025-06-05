@@ -239,25 +239,35 @@ export default function UserProfile() {
         {/* Clubs Section */}
         <div className="mb-12">
           {/* Adjusted heading structure and margin */}
-          <div className="flex justify-between mt-8">
+          <div className="flex justify-between mt-8 mb-3">
              <h2>Clubs</h2>
           </div>
           {/* Update to horizontal flex scroll layout */}
-          <div className="flex overflow-x-auto space-x-4 py-5">
+          {/* Revert grid layout back to flex for horizontal scroll */}
+          <div className="flex overflow-x-auto space-x-4 py-5"> {/* Changed from grid */}
             {userClubs.length > 0 ? (
               userClubs.map((club) => {
                 console.log("Club ID for key:", club.id);
                 return (
-                  <Link key={club.id} href={`/club/${club.id}`}>
-                    <div key={club.id} className="w-24 h-36 md:w-32 md:h-48 lg:w-40 lg:h-60 flex-shrink-0 rounded-md overflow-hidden shadow-lg cursor-pointer">
-                      <img
-                        src={getImageUrl(club.cover_image) || "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover"}
-                        alt={club.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover";
-                        }}
-                      />
+                  <Link key={club.id} href={`/club/${club.id}`} className="transform hover:scale-105 transition-transform duration-200 cursor-pointer flex-shrink-0"> {/* Add flex-shrink-0 here */}
+                    {/* Container div for image and name, using flex column */}
+                    <div className="flex flex-col items-center w-24 md:w-32 lg:w-40"> {/* Adjust width as needed, flex column */}
+                      {/* Image container */}
+                      <div className="w-full h-24 md:h-32 lg:h-40 rounded-md overflow-hidden shadow-lg"> {/* Adjust height/width relative to parent flex item */}
+                        <img
+                          src={getImageUrl(club.cover_image) || "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover"}
+                          alt={club.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover";
+                          }}
+                        />
+                      </div>
+                      {/* Club Name */}
+                      <div className="mt-2 text-sm text-center text-gray-700 font-medium w-full"> {/* Styling for the name */}
+                        {/* Added break-words to allow long words to break */}
+                         <p className="break-words">{club.name}</p>
+                      </div>
                     </div>
                   </Link>
                 );
