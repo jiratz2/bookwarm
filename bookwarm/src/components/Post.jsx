@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import CreatePostForm from "./CreatePostForm";
+import { FiHeart, FiHeartFilled } from 'react-icons/fi';
+import { FaRegHeart, FaHeart, FaTrashAlt } from 'react-icons/fa';
+import Link from "next/link";
 
 const Post = ({ clubId }) => {
   const [posts, setPosts] = useState([]);
@@ -344,6 +347,20 @@ const Post = ({ clubId }) => {
     }
   };
 
+  // Function to check if the current user has liked the post
+  const hasUserLikedPost = (post) => {
+    const token = localStorage.getItem("token");
+    if (!token || !post.likes) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.id;
+      return post.likes.includes(userId);
+    } catch (e) {
+      console.error("Error decoding token:", e);
+      return false;
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -446,9 +463,21 @@ const Post = ({ clubId }) => {
                 {post.user_display_name && post.user_username && (
                   <p className="text-sm text-gray-500">@{post.user_username}</p>
                 )}
-                <p className="text-sm text-gray-500">
-                  {formatDate(post.created_at)}
-                </p>
+                <div className="flex items-center text-sm text-gray-500">
+                  <p>{formatDate(post.created_at)}</p>
+                  {post.book_title && (
+                    <>
+                      <span className="mx-2 text-gray-400">•</span>
+                      <span className="text-gray-600">กำลังพูดถึง</span>
+                      <Link
+                        href={`/bookProfile/${post.book_id}`}
+                        className="ml-1 text-blue-600 hover:underline font-medium"
+                      >
+                        {post.book_title}
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             
@@ -456,10 +485,10 @@ const Post = ({ clubId }) => {
             {isPostOwner(post) && (
               <button
                 onClick={() => handleDeletePost(post._id)}
-                className="text-red-500 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50 transition-colors"
+                className="text-gray-400 hover:text-gray-700 text-lg p-1 rounded transition-colors"
                 title="Delete post"
               >
-                🗑️
+                <FaTrashAlt />
               </button>
             )}
           </div>
@@ -471,33 +500,21 @@ const Post = ({ clubId }) => {
             </p>
           </div>
 
-          {/* ข้อมูลหนังสือ (ถ้ามี) */}
-          {post.book_title && (
-            <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center">
-                <span className="text-blue-600 mr-3 text-lg">📚</span>
-                <div>
-                  <p className="font-medium text-blue-900">
-                    {post.book_title}
-                  </p>
-                  {post.book_author && (
-                    <p className="text-sm text-blue-700">
-                      by {post.book_author}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Actions */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => handleLikeToggle(post._id)}
-                className="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-gray-50"
+                className={
+                  `flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-gray-50 ` +
+                  `${hasUserLikedPost(post) ? 'text-red-500' : ''}` // Apply red color if liked
+                }
+                title="Like/Unlike post"
+                disabled={!localStorage.getItem("token")} // Disable if not logged in
               >
-                <span className="text-lg">❤️</span>
+                <span className="text-lg">
+                  {hasUserLikedPost(post) ? <FaHeart /> : <FaRegHeart />} {/* Conditional rendering of icon */}
+                </span>
                 <span className="text-sm font-medium">
                   {post.likes_count || post.likes?.length || 0}
                 </span>
@@ -545,6 +562,21 @@ const Post = ({ clubId }) => {
           {/* แสดง replies เฉพาะของโพสต์นี้ */}
           {(replies[post._id] || []).map(reply => {
             console.log("reply object:", reply);
+            // Function to check if the current user has liked this reply
+            const hasUserLikedReply = (reply) => {
+              const token = localStorage.getItem("token");
+              if (!token || !reply.likes) return false;
+              try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userId = payload.id;
+                // reply.likes is an array of user IDs who liked the reply
+                return reply.likes.includes(userId);
+              } catch (e) {
+                console.error("Error decoding token for reply like check:", e);
+                return false;
+              }
+            };
+
             return (
               <div key={reply._id} className="flex items-start space-x-3 mt-4 bg-gray-50 rounded-lg p-3">
                 {/* รูปโปรไฟล์ */}
@@ -572,21 +604,25 @@ const Post = ({ clubId }) => {
                 </div>
                 {/* ปุ่มไลก์ */}
                 <button
-                  className={`ml-2 text-lg ${reply.likes && localStorage.getItem("token") && reply.likes.some(id => id === JSON.parse(atob(localStorage.getItem("token").split('.')[1])).id) ? "text-red-500" : "text-gray-500 hover:text-red-500"}`}
+                  className={
+                    `ml-2 text-lg p-1 rounded hover:bg-gray-100 transition-colors flex items-center ` +
+                    `${hasUserLikedReply(reply) ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`
+                  }
                   onClick={() => handleLikeReply(reply._id, post._id)}
                   disabled={!localStorage.getItem("token")}
-                  title={localStorage.getItem("token") ? "Like/Unlike" : "Please log in to like"}
+                  title={localStorage.getItem("token") ? "Like/Unlike reply" : "Please log in to like"}
                 >
-                  ❤️ <span className="text-base">{reply.likes ? reply.likes.length : 0}</span>
+                  {hasUserLikedReply(reply) ? <FaHeart /> : <FaRegHeart />} {/* Conditional rendering of icon */}
+                  <span className="text-sm font-medium ml-1">{reply.likes ? reply.likes.length : 0}</span>
                 </button>
                 {/* ปุ่มลบ reply เฉพาะเจ้าของ */}
                 {isReplyOwner(reply) && (
                   <button
-                    className="ml-2 text-red-500 hover:text-red-700 text-lg p-1 rounded hover:bg-red-50 transition-colors"
+                    className="ml-2 text-gray-400 hover:text-gray-700 text-lg p-1 rounded transition-colors flex items-center"
                     onClick={() => handleDeleteReply(reply._id, post._id)}
                     title="Delete reply"
                   >
-                    🗑️
+                    <FaTrashAlt />
                   </button>
                 )}
               </div>

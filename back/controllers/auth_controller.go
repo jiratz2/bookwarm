@@ -240,3 +240,35 @@ func UpdateProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
 }
+
+func GetUserProfile(c *gin.Context) {
+	userId := c.Param("id")
+	if userId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
+		return
+	}
+
+	// Convert userId from string to ObjectID
+	userObjectId, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	var user models.User
+	collection := config.DB.Database("bookwarm").Collection("users")
+	err = collection.FindOne(context.TODO(), bson.M{"_id": userObjectId}).Decode(&user)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"displayname":     user.DisplayName,
+		"profile_img_url": user.ProfilePic,
+		"bg_img_url":      user.BgImgURL,
+		"bio":             user.Bio,
+		"created_at":      user.CreatedAt,
+		"updated_at":      user.UpdatedAt,
+	})
+}

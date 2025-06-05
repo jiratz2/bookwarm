@@ -496,3 +496,38 @@ func CheckMembership(c *gin.Context) {
 	isMember := isClubMember(userID, clubID)
 	c.JSON(http.StatusOK, gin.H{"isMember": isMember})
 }
+
+// GetClubsByUserID ดึง Club ที่ผู้ใช้ตาม ID ที่ระบุเป็นสมาชิกหรือเป็นเจ้าของ
+func GetClubsByUserID(c *gin.Context) {
+	userId := c.Param("userId")
+	userID, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	clubCollection := config.DB.Database("bookwarm").Collection("clubs")
+
+	// หา clubs ที่ user เป็นเจ้าของหรือเป็นสมาชิก
+	filter := bson.M{
+		"$or": []bson.M{
+			{"owner_id": userID},
+			{"members": userID},
+		},
+	}
+
+	cursor, err := clubCollection.Find(context.TODO(), filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch clubs"})
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var clubs []models.Club
+	if err := cursor.All(context.TODO(), &clubs); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode clubs"})
+		return
+	}
+
+	c.JSON(http.StatusOK, clubs)
+}

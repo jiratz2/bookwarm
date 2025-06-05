@@ -431,3 +431,51 @@ func DeleteMark(c *gin.Context) {
 		"message": "Mark deleted successfully",
 	})
 }
+
+// GetMarksByUserID ดึงสถานะทั้งหมดของหนังสือที่ผู้ใช้ตาม ID ที่ระบุมาร์กไว้ พร้อมข้อมูลหนังสือ
+func GetMarksByUserID(c *gin.Context) {
+	userId := c.Param("user_id")
+	userID, err := primitive.ObjectIDFromHex(userId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
+	collection := config.DB.Database("bookwarm").Collection("marks")
+	
+	// 🔍 ใช้ aggregation pipeline เพื่อดึง marks ของ user พร้อมข้อมูลหนังสือ (Lookup from books)
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"user_id": userID,
+			},
+		},
+		{
+			"$lookup": bson.M{
+				"from":         "books",          // ชื่อ collection ที่ต้องการ join
+				"localField":   "book_id",        // ฟิลด์ใน collection 'marks'
+				"foreignField": "_id",            // ฟิลด์ใน collection 'books' ที่ตรงกับ book_id
+				"as":           "book",           // ชื่อฟิลด์ใหม่ที่จะเก็บข้อมูลหนังสือที่ join ได้
+			},
+		},
+		{
+			"$unwind": "$book", // คลาย array 'book' ที่ได้จาก $lookup (เพราะ book_id ควรมีแค่ 1 book)
+		},
+		// Optional: Add more stages if needed, e.g., $project to shape the output
+	}
+
+	cursor, err := collection.Aggregate(context.TODO(), pipeline)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch marks with book details"})
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var marks []bson.M // ใช้ bson.M เพื่อรองรับโครงสร้างข้อมูลที่ได้จากการ aggregation (รวม book detail)
+	if err := cursor.All(context.TODO(), &marks); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode marks with book details"})
+		return
+	}
+
+	c.JSON(http.StatusOK, marks) // ส่งข้อมูล mark ที่มี book detail กลับไป
+}
