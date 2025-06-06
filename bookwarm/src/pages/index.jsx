@@ -3,15 +3,18 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { useEffect, useState } from "react";
 import NavBar from "../components/Navbar";
 import Link from "next/link";
-import { toast } from "react-toastify";
+import { useRouter } from "next/router";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import RecommendSection from "../components/RecommendSection";
 import RecommendBooks from "../components/RecommendBooks";
 import { Users } from "lucide-react";
 import { FaRegHeart, FaHeart } from 'react-icons/fa';
 import { jwtDecode } from "jwt-decode";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Home() {
+  const router = useRouter();
   const [randomPosts, setRandomPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [replies, setReplies] = useState({});
@@ -71,10 +74,13 @@ export default function Home() {
   const handleLikeToggle = async (postId) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.error("Please log in to like posts");
+      toast.error("You must be logged in to like posts");
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500); // Wait for 1.5 seconds before redirecting
       return;
     }
-
+  
     try {
       const response = await fetch(
         `http://localhost:8080/api/post/${postId}/like`,
@@ -86,9 +92,9 @@ export default function Home() {
           },
         }
       );
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         toast.success(data.message);
         // Update the specific post's like status instead of fetching all posts
@@ -112,7 +118,7 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Like toggle error:", err);
-      toast.error("Network error");
+      toast.error("Network error. Please check your connection.");
     }
   };
 
@@ -209,7 +215,19 @@ export default function Home() {
 
   return (
     <div>
-      <main className=" mt-30 px-4 md:px-8 lg:px-16 ">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      <main className="mt-30 px-4 md:px-8 lg:px-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10">
             <div>

@@ -9,6 +9,12 @@ import Link from "next/link";
 export default function Club() {
   const [clubs, setClubs] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
 
   useEffect(() => {
     const fetchClubs = async () => {
@@ -55,12 +61,14 @@ export default function Club() {
         )}
       </div>
 
-      <Link href="/createclub">
-        <button className="fixed bottom-0 right-0 m-10 bg-blue-800 cursor-pointer hover:bg-blue-900 p-4 px-5 rounded-3xl flex items-center text-white font-bold">
-          <Plus className="mr-4" size={30} />
-          Create Your Club
-        </button>
-      </Link>
+      {isLoggedIn && (
+        <Link href="/createclub">
+          <button className="fixed bottom-0 right-0 m-10 bg-blue-800 cursor-pointer hover:bg-blue-900 p-4 px-5 rounded-3xl flex items-center text-white font-bold">
+            <Plus className="mr-4" size={30} />
+            Create Your Club
+          </button>
+        </Link>
+      )}
     </div>
   );
 }

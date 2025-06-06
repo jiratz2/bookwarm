@@ -288,7 +288,7 @@ export default function UserProfilePage() {
                 console.log("Club ID for key:", club.id);
                 return (
                   <Link key={club.id} href={`/club/${club.id}`} className="cursor-pointer">
-                    <div className="w-24 h-36 md:w-32 md:h-48 lg:w-40 lg:h-60 rounded-md overflow-hidden shadow-lg transform hover:scale-105 transition-transform duration-200">
+                    <div className="w-24 h-36 md:w-32 md:h-48 lg:w-65 lg:h-65 rounded-md overflow-hidden shadow-lg transform hover:scale-105 transition-transform duration-200">
                       <img
                         src={getImageUrl(club.cover_image) || "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover"}
                         alt={club.name}

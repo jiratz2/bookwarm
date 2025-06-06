@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useRouter } from "next/router";
 import CreatePostForm from "./CreatePostForm";
 import { FiHeart, FiHeartFilled } from 'react-icons/fi';
 import { FaRegHeart, FaHeart, FaTrashAlt } from 'react-icons/fa';
 import Link from "next/link";
 
 const Post = ({ clubId }) => {
+  const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -88,7 +91,8 @@ const Post = ({ clubId }) => {
   const handleLikeToggle = async (postId) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.error("Please log in to like posts");
+      toast.error("You must be logged in to like posts");
+      router.push("/login");
       return;
     }
 
@@ -193,7 +197,7 @@ const Post = ({ clubId }) => {
   const handleLikeReply = async (replyId, postId) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.error("Please log in to like replies");
+      toast.error("You must be logged in to like replies");
       return;
     }
     try {
@@ -410,8 +414,19 @@ const Post = ({ clubId }) => {
 
   return (
     <div className="space-y-4">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       {/* <CreatePostForm clubId={clubId} onPostCreated={fetchPosts} />*/}
-
       {loading && <p>Loading posts...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
 
@@ -512,8 +527,7 @@ const Post = ({ clubId }) => {
                   `flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-gray-50 ` +
                   `${hasUserLikedPost(post) ? 'text-red-500' : ''}` // Apply red color if liked
                 }
-                title="Like/Unlike post"
-                disabled={!localStorage.getItem("token")} // Disable if not logged in
+                title={localStorage.getItem("token") ? "Like/Unlike post" : "Please log in to like posts"}
               >
                 <span className="text-lg">
                   {hasUserLikedPost(post) ? <FaHeart /> : <FaRegHeart />} {/* Conditional rendering of icon */}
@@ -617,8 +631,7 @@ const Post = ({ clubId }) => {
                     `${hasUserLikedReply(reply) ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}`
                   }
                   onClick={() => handleLikeReply(reply._id, post._id)}
-                  disabled={!localStorage.getItem("token")}
-                  title={localStorage.getItem("token") ? "Like/Unlike reply" : "Please log in to like"}
+                  title={localStorage.getItem("token") ? "Like/Unlike reply" : "Please log in to like replies"}
                 >
                   {hasUserLikedReply(reply) ? <FaHeart /> : <FaRegHeart />} {/* Conditional rendering of icon */}
                   <span className="text-sm font-medium ml-1">{reply.likes ? reply.likes.length : 0}</span>

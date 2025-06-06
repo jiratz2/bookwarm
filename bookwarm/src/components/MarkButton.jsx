@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -71,8 +73,8 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        // Maybe show a login prompt instead of a toast here?
-        console.log("Please login to mark books");
+        toast.error("You must be logged in to mark books");
+        setIsDropdownOpen(false);
         return;
       }
 
@@ -108,14 +110,15 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
           onAchievementUnlock(data.achievement, bookTitle);
         }
         setIsDropdownOpen(false);
+        toast.success("Book status updated successfully!");
       } else {
         const errorData = await res.json();
         console.error("Failed to update status:", errorData.error);
-        // Maybe show an error notification here?
+        toast.error(errorData.error || "Failed to update book status");
       }
     } catch (err) {
       console.error(err);
-      // Maybe show an error notification here?
+      toast.error("Network error. Please check your connection.");
     }
   };
 
@@ -131,7 +134,7 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.log("Please login to mark books");
+        toast.error("You must be logged in to remove book status");
         return;
       }
 
@@ -155,14 +158,15 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
         setCurrentMarkId(null);
         setIsDropdownOpen(false);
         console.log("Mark deleted successfully");
+        toast.success("Book status removed successfully!");
       } else {
         const errorData = await res.json();
         console.error("Failed to remove status:", errorData.error);
-        alert("ไม่สามารถลบสถานะได้: " + errorData.error);
+        toast.error(errorData.error || "Failed to remove book status");
       }
     } catch (err) {
       console.error("Error deleting mark:", err);
-      alert("เกิดข้อผิดพลาดในการลบสถานะ กรุณาลองใหม่อีกครั้ง");
+      toast.error("Network error. Please check your connection.");
     }
   };
 
@@ -193,55 +197,70 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
   }
 
   return (
-    <div className="relative mt-6 dropdown-container">
-      <button
-        className={buttonClass}
-        onClick={toggleDropdown}
-      >
-        {getStatusLabel(currentStatus)}
-        <span
-          className={`transform transition-transform duration-200 ${
-            isDropdownOpen ? "rotate-180" : ""
-          }`}
-        >
-          ▼
-        </span>
-      </button>
+    <>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
 
-      {isDropdownOpen && (
-        <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-10 transform transition-all duration-200 ease-in-out">
-          <ul className="py-2">
-            <li className="px-4 py-3 font-semibold text-gray-700 border-b border-gray-100 bg-gray-50 rounded-t-lg">
-              {currentStatus ? "Change status to" : "Mark as"}
-            </li>
-            {validStatuses.map(({ label, value }) => (
-              <li
-                key={value}
-                className={`px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors duration-150 ${
-                  currentStatus === value 
-                    ? "text-blue-600 font-medium bg-blue-50" 
-                    : "text-gray-700 hover:text-blue-600"
-                }`}
-                onClick={() => handleSelectStatus(value)}
-              >
-                {label}
+      <div className="relative mt-6 dropdown-container">
+        <button
+          className={buttonClass}
+          onClick={toggleDropdown}
+        >
+          {getStatusLabel(currentStatus)}
+          <span
+            className={`transform transition-transform duration-200 ${
+              isDropdownOpen ? "rotate-180" : ""
+            }`}
+          >
+            ▼
+          </span>
+        </button>
+
+        {isDropdownOpen && (
+          <div className="absolute left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-10 transform transition-all duration-200 ease-in-out">
+            <ul className="py-2">
+              <li className="px-4 py-3 font-semibold text-gray-700 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+                {currentStatus ? "Change status to" : "Mark as"}
               </li>
-            ))}
-            {currentStatus && (
-              <li
-                className="px-4 py-2.5 text-red-600 hover:bg-red-50 cursor-pointer border-t border-gray-100 font-medium transition-colors duration-150 rounded-b-lg"
-                onClick={() => {
-                  console.log("Delete button clicked");
-                  handleDeleteMark();
-                }}
-              >
-                Remove status
-              </li>
-            )}
-          </ul>
-        </div>
-      )}
-    </div>
+              {validStatuses.map(({ label, value }) => (
+                <li
+                  key={value}
+                  className={`px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors duration-150 ${
+                    currentStatus === value 
+                      ? "text-blue-600 font-medium bg-blue-50" 
+                      : "text-gray-700 hover:text-blue-600"
+                  }`}
+                  onClick={() => handleSelectStatus(value)}
+                >
+                  {label}
+                </li>
+              ))}
+              {currentStatus && (
+                <li
+                  className="px-4 py-2.5 text-red-600 hover:bg-red-50 cursor-pointer border-t border-gray-100 font-medium transition-colors duration-150 rounded-b-lg"
+                  onClick={() => {
+                    console.log("Delete button clicked");
+                    handleDeleteMark();
+                  }}
+                >
+                  Remove status
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 
