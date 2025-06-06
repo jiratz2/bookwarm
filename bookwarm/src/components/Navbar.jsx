@@ -63,8 +63,13 @@ const NavBar = () => {
 
   return (
     <header className="fixed top-0 left-0 flex justify-between items-center px-20 w-full z-50 bg-white h-[100px] max-md:px-10 max-sm:px-5 max-sm:h-[80px]">
-      <Link href="/" className="text-3xl font-bold text-black max-sm:text-2xl">
-        BookWarm
+      <Link href="/" className="text-3xl font-bold flex items-center text-black max-sm:text-2xl">
+        <img
+          src="https://cdn.builder.io/api/v1/image/assets/b635d51ad8de4cca8d40bf6f9a8f07c8/b5269073adbeef98fe93d93570fc1893a669320f?placeholderIfAbsent=true"
+          alt="BookWarm Logo"
+          className="h-[40px] mr-3 w-auto object-contain max-sm:h-[60px]"
+        />
+        <h1>Bookwarm</h1>
       </Link>
       <nav className="text-xl md:text-base flex gap-11 items-center max-sm:hidden">
         <a href="/" className="font-bold text-black hover:text-blue-800">

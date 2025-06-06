@@ -72,7 +72,7 @@ const Filter = ({ setFilters }) => {
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold">Filter</h3>
         <button
-          className="px-4 py-1 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 transition"
+          className="px-4 py-1 text-sm font-medium text-white  rounded bg-blue-800 hover:bg-blue-700 transition"
           onClick={resetFilters}
         >
           Reset
