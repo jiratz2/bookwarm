@@ -554,7 +554,7 @@ const Post = ({ clubId }) => {
               }}
               className="m-2"
             >
-              ตอบกลับ
+              Reply
             </button>
           )}
 

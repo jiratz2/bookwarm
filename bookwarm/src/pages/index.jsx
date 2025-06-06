@@ -21,6 +21,7 @@ export default function Home() {
   const [showReplyForm, setShowReplyForm] = useState({});
   const [replyContent, setReplyContent] = useState({});
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [clubMemberships, setClubMemberships] = useState({});
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -33,6 +34,25 @@ export default function Home() {
       }
     }
   }, []);
+
+  // Check club membership
+  const checkClubMembership = async (clubId) => {
+    const token = localStorage.getItem("token");
+    if (!token || !clubId) return false;
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/club/${clubId}/check-membership`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      return response.ok && data.isMember;
+    } catch (err) {
+      console.error("Error checking club membership:", err);
+      return false;
+    }
+  };
 
   const fetchRandomPosts = async () => {
     try {
@@ -48,6 +68,16 @@ export default function Home() {
         const data = await res.json();
         console.log("Random posts data:", data);
         setRandomPosts(data.posts || []);
+        
+        // Check memberships for each post's club
+        const membershipChecks = {};
+        for (const post of data.posts || []) {
+          if (post.club_id) {
+            membershipChecks[post.club_id] = await checkClubMembership(post.club_id);
+          }
+        }
+        setClubMemberships(membershipChecks);
+        
         // Fetch replies for each post
         data.posts?.forEach(post => fetchReplies(post._id));
       } else {
@@ -312,19 +342,21 @@ export default function Home() {
                           </button>
                         </div>
 
-                        {/* Reply button */}
-                        <button
-                          onClick={() => {
-                            setShowReplyForm(prev => ({ ...prev, [post._id]: !prev[post._id] }));
-                            if (!replies[post._id]) fetchReplies(post._id);
-                          }}
-                          className="mt-2 text-sm text-gray-600 hover:text-gray-900"
-                        >
-                          Reply
-                        </button>
+                        {/* Only show reply button for club members */}
+                        {clubMemberships[post.club_id] && (
+                          <button
+                            onClick={() => {
+                              setShowReplyForm(prev => ({ ...prev, [post._id]: !prev[post._id] }));
+                              if (!replies[post._id]) fetchReplies(post._id);
+                            }}
+                            className="mt-2 text-sm text-gray-600 hover:text-gray-900"
+                          >
+                            Reply
+                          </button>
+                        )}
 
-                        {/* Reply form */}
-                        {showReplyForm[post._id] && (
+                        {/* Only show reply form for club members */}
+                        {clubMemberships[post.club_id] && showReplyForm[post._id] && (
                           <form onSubmit={e => { e.preventDefault(); handleReply(post._id); }} className="mt-4 flex items-center space-x-2">
                             <textarea
                               value={replyContent[post._id] || ""}
