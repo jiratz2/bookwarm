@@ -17,7 +17,6 @@ const BookProfilePage = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // ตรวจสอบ token
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -30,7 +29,6 @@ const BookProfilePage = () => {
     }
   }, []);
 
-  // โหลดข้อมูลหนังสือ
   useEffect(() => {
     if (!id) return;
 
@@ -55,14 +53,12 @@ const BookProfilePage = () => {
     fetchBook();
   }, [id]);
 
-  // ฟังก์ชันสำหรับอัปเดตค่าเฉลี่ยเรตติ้ง
   const handleAverageRatingUpdate = (newAverage) => {
     setAverageRating(newAverage);
   };
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
-  // ปิด dropdown เมื่อคลิกที่อื่น
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isDropdownOpen && !event.target.closest('.dropdown-container')) {
@@ -119,7 +115,6 @@ const BookProfilePage = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto mt-20">
-      {/* ส่วนหัว */}
       <div className="flex gap-6 mb-8">
         <img
           src={book.coverImage || "https://via.placeholder.com/150x225/cccccc/666666?text=No+Cover"}
@@ -147,7 +142,6 @@ const BookProfilePage = () => {
 
           <MarkButton bookId={id} user={currentUser} bookTitle={book.title} />
 
-          {/* แท็ก */}
           <div className="flex flex-wrap gap-2 mt-4">
             {(book.category || []).map((category, index) => (
               <span
@@ -181,7 +175,6 @@ const BookProfilePage = () => {
         </div>
       </div>
 
-      {/* ข้อมูลหนังสือ */}
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-3">About this book</h2>
         <div className="prose max-w-none">
@@ -191,12 +184,10 @@ const BookProfilePage = () => {
         </div>
       </div>
 
-      {/* รีวิวส่วน */}
       <div className="border-t pt-8">
         <ReviewSection bookId={id} user={currentUser} onAverageRatingUpdate={handleAverageRatingUpdate}/>
       </div>
 
-      {/* Custom Toast for achievements */}
       {showToast && (
         <Toast
           message={toastMessage}

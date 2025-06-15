@@ -14,7 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// CreateReply
 func CreateReply(c *gin.Context) {
 	postIDHex := c.Param("postId")
 	postID, err := primitive.ObjectIDFromHex(postIDHex)
@@ -38,7 +37,6 @@ func CreateReply(c *gin.Context) {
 		return
 	}
 
-	// Get the post to check club membership
 	postCollection := config.DB.Database("bookwarm").Collection("post")
 	var post models.Post
 	err = postCollection.FindOne(context.TODO(), bson.M{"_id": postID}).Decode(&post)
@@ -47,7 +45,6 @@ func CreateReply(c *gin.Context) {
 		return
 	}
 
-	// Check if user is a club member
 	if !isClubMember(userID, post.ClubID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only club members can reply to posts"})
 		return
@@ -74,7 +71,6 @@ func CreateReply(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Reply created", "reply": reply})
 }
 
-// GetRepliesByPost
 func GetRepliesByPost(c *gin.Context) {
 	postIDHex := c.Param("postId")
 	postID, err := primitive.ObjectIDFromHex(postIDHex)
@@ -125,7 +121,6 @@ func GetRepliesByPost(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"replies": replies})
 }
 
-// Like/Unlike Reply
 func LikeReply(c *gin.Context) {
 	replyIDHex := c.Param("replyId")
 	replyID, err := primitive.ObjectIDFromHex(replyIDHex)
@@ -178,7 +173,6 @@ func LikeReply(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": msg})
 }
 
-// Delete Reply
 func DeleteReply(c *gin.Context) {
 	replyIDHex := c.Param("replyId")
 	replyID, err := primitive.ObjectIDFromHex(replyIDHex)

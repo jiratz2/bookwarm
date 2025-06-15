@@ -171,15 +171,13 @@ func UpdateProfile(c *gin.Context) {
 	emailRaw, _ := c.Get("user")
 	email := emailRaw.(string)
 
-	// รับข้อมูลจาก FormData
 	displayName := c.PostForm("displayname")
 	bio := c.PostForm("bio")
 
-	// รับไฟล์รูปภาพโปรไฟล์
 	var profilePicURL string
 	file, err := c.FormFile("profile_picture")
 	if err == nil {
-		// สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
+
 		if err := os.MkdirAll("uploads", 0755); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create uploads directory"})
 			return
@@ -190,15 +188,15 @@ func UpdateProfile(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save profile picture"})
 			return
 		}
-		// ใช้ URL แบบเต็มที่สามารถเข้าถึงได้จาก frontend
+
 		profilePicURL = fmt.Sprintf("http://localhost:8080/%s", filePath)
 	}
 
-	// รับไฟล์ Cover Photo
+
 	var coverPhotoURL string
 	coverFile, err := c.FormFile("cover_photo")
 	if err == nil {
-		// สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
+
 		if err := os.MkdirAll("uploads", 0755); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create uploads directory"})
 			return
@@ -209,13 +207,12 @@ func UpdateProfile(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save cover photo"})
 			return
 		}
-		// ใช้ URL แบบเต็มที่สามารถเข้าถึงได้จาก frontend
 		coverPhotoURL = fmt.Sprintf("http://localhost:8080/%s", coverFilePath)
 	}
 
 	collection := config.DB.Database("bookwarm").Collection("users")
 
-	// อัปเดตข้อมูลใน MongoDB
+
 	update := bson.M{
 		"$set": bson.M{
 			"displayname": displayName,
@@ -248,7 +245,6 @@ func GetUserProfile(c *gin.Context) {
 		return
 	}
 
-	// Convert userId from string to ObjectID
 	userObjectId, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})

@@ -18,7 +18,6 @@ const LoginPage = () => {
           />
         </motion.div>
 
-        {/* ฟอร์มเข้าสู่ระบบ */}
         <div className="relative ">
           <AuthForm />
         </div>

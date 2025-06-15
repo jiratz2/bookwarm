@@ -13,7 +13,7 @@ const BookProfilePage = () => {
   useEffect(() => {
     if (!router.isReady || !id) return;
     
-    console.log('Fetching book with ID:', id); // เพื่อ debug
+    console.log('Fetching book with ID:', id); 
     
     fetch(`http://localhost:8080/api/books/${id}`)
       .then((res) => {
@@ -23,7 +23,7 @@ const BookProfilePage = () => {
         return res.json();
       })
       .then((data) => {
-        console.log('Book data:', data); // เพื่อ debug
+        console.log('Book data:', data); 
         setBook(data);
       })
       .catch((error) => {

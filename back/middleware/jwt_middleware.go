@@ -44,12 +44,12 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 
 		// ดึง email และ id จาก claims
 		email := claims["email"].(string)
-		userID := claims["id"].(string) // ← ✅ ดึง user ID ด้วย
+		userID := claims["id"].(string) 
 
-		// ใส่ไว้ใน context
+		
 		c.Set("user", email)
-		c.Set("userId", userID) // ← ✅ ใส่ userId ลง context
-		c.Set("displayName", claims["displayname"]) // ถ้ามี displayname ใน claims
+		c.Set("userId", userID) 
+		c.Set("displayName", claims["displayname"]) 
 		c.Next()
 
 	}

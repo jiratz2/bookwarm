@@ -16,7 +16,7 @@ import (
 )
 
 func CreateReview(c *gin.Context) {
-	// Parse input จาก JSON
+
 	var input struct {
 		BookID  string `json:"book_id" binding:"required"`
 		Rating  int    `json:"rating" binding:"required,min=1,max=5"`
@@ -24,60 +24,55 @@ func CreateReview(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		log.Printf("❌ BindJSON error: %v", err)
+		log.Printf("BindJSON error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// แปลง bookID เป็น ObjectID
 	bookID, err := primitive.ObjectIDFromHex(input.BookID)
 	if err != nil {
-		log.Printf("❌ Invalid book ID format: %v", err)
+		log.Printf("Invalid book ID format: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID format"})
 		return
 	}
 
-	// ดึง email จาก JWT ที่ middleware เซตไว้
 	userRaw, exists := c.Get("user")
 	if !exists {
-		log.Printf("❌ User not authenticated")
+		log.Printf("User not authenticated")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 	email := userRaw.(string)
 	log.Printf("📧 User email: %s", email)
 
-	// ดึงข้อมูล user จาก email
 	var user models.User
 	userCollection := config.DB.Database("bookwarm").Collection("users")
 	err = userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
 	if err != nil {
-		log.Printf("❌ User not found: %v", err)
+		log.Printf("User not found: %v", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 	log.Printf("👤 User found: %+v", user)
 
-	// เตรียม collection
+
 	reviewCollection := config.DB.Database("bookwarm").Collection("reviews")
 
-	// ตรวจสอบว่าผู้ใช้รีวิวหนังสือเล่มนี้ไปแล้วหรือยัง
 	filter := bson.M{"book_id": bookID, "reviewer_name": user.DisplayName}
-	log.Printf("🔍 Checking existing review with filter: %+v", filter)
+	log.Printf("Checking existing review with filter: %+v", filter)
 	count, err := reviewCollection.CountDocuments(context.TODO(), filter)
 	if err != nil {
-		log.Printf("❌ Database error: %v", err)
+		log.Printf("Database error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
-	log.Printf("📊 Found %d existing reviews", count)
+	log.Printf("Found %d existing reviews", count)
 	if count > 0 {
-		log.Printf("❌ User already reviewed this book")
+		log.Printf("User already reviewed this book")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "You have already reviewed this book"})
 		return
 	}
 
-	// ตรวจสอบว่าหนังสือมีอยู่จริงหรือไม่
 	bookCollection := config.DB.Database("bookwarm").Collection("books")
 	bookCount, err := bookCollection.CountDocuments(context.TODO(), bson.M{"_id": bookID})
 	if err != nil {
@@ -89,7 +84,6 @@ func CreateReview(c *gin.Context) {
 		return
 	}
 
-	// สร้าง Review object
 	review := models.Review{
 		ID:           primitive.NewObjectID(),
 		BookID:       bookID,
@@ -100,19 +94,16 @@ func CreateReview(c *gin.Context) {
 		ReviewDate:   time.Now(),
 	}
 
-	// บันทึกลง MongoDB
 	insertResult, err := reviewCollection.InsertOne(context.TODO(), review)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save review"})
 		return
 	}
 
-	// ดึงรีวิวที่เพิ่งสร้างพร้อมข้อมูล user
 	createdReviewID := insertResult.InsertedID.(primitive.ObjectID)
 	enrichedReview, err := GetReviewByID(createdReviewID)
 	if err != nil {
-		log.Printf("❌ Failed to fetch enriched review: %v", err)
-		// ส่ง review ตัวเก่าไปแทน ถ้าดึง enriched review ไม่ได้
+		log.Printf("Failed to fetch enriched review: %v", err)
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Review submitted successfully",
 			"review": review,
@@ -126,7 +117,6 @@ func CreateReview(c *gin.Context) {
 	})
 }
 
-// GetReviewByID fetches a single review by ID and joins user data
 func GetReviewByID(reviewID primitive.ObjectID) (bson.M, error) {
 	reviewCollection := config.DB.Database("bookwarm").Collection("reviews")
 
@@ -176,23 +166,22 @@ func GetAllReviews(c *gin.Context) {
 	bookIDParam := c.Param("bookId")
 	bookID, err := primitive.ObjectIDFromHex(bookIDParam)
 	if err != nil {
-		log.Printf("❌ Invalid book ID format: %v", err)
+		log.Printf("Invalid book ID format: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID format"})
 		return
 	}
 
 	reviewCollection := config.DB.Database("bookwarm").Collection("reviews")
 
-	// ตรวจสอบว่าหนังสือมีอยู่จริงหรือไม่
 	bookCollection := config.DB.Database("bookwarm").Collection("books")
 	bookCount, err := bookCollection.CountDocuments(context.TODO(), bson.M{"_id": bookID})
 	if err != nil {
-		log.Printf("❌ Error checking book existence: %v", err)
+		log.Printf("Error checking book existence: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
 	if bookCount == 0 {
-		log.Printf("❌ Book not found with ID: %s", bookIDParam)
+		log.Printf("Book not found with ID: %s", bookIDParam)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
 		return
 	}
@@ -228,10 +217,10 @@ func GetAllReviews(c *gin.Context) {
 		bson.D{{Key: "$sort", Value: bson.M{"review_date": -1}}},
 	}
 
-	log.Printf("🔍 Executing aggregation pipeline for book ID: %s", bookIDParam)
+	log.Printf("Executing aggregation pipeline for book ID: %s", bookIDParam)
 	cursor, err := reviewCollection.Aggregate(context.TODO(), pipeline)
 	if err != nil {
-		log.Printf("❌ Aggregation error: %v", err)
+		log.Printf("Aggregation error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reviews"})
 		return
 	}
@@ -243,10 +232,10 @@ func GetAllReviews(c *gin.Context) {
 	for cursor.Next(context.TODO()) {
 		var review bson.M
 		if err := cursor.Decode(&review); err != nil {
-			log.Printf("❌ Error decoding review: %v", err)
+			log.Printf("Error decoding review: %v", err)
 			continue
 		}
-		log.Printf("📝 Review found: %+v", review)
+		log.Printf("Review found: %+v", review)
 		reviews = append(reviews, review)
 		if rating, ok := review["rating"].(int32); ok {
 			totalRating += int(rating)
@@ -254,7 +243,7 @@ func GetAllReviews(c *gin.Context) {
 	}
 
 	if err := cursor.Err(); err != nil {
-		log.Printf("❌ Cursor error: %v", err)
+		log.Printf(" Cursor error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error processing reviews"})
 		return
 	}
@@ -265,9 +254,9 @@ func GetAllReviews(c *gin.Context) {
 		average = float64(totalRating) / float64(len(reviews))
 	}
 
-	log.Printf("✅ Successfully fetched %d reviews for book ID: %s", len(reviews), bookIDParam)
-	// Add debug log to inspect fetched reviews before sending
-	log.Printf("📚 Reviews being sent to frontend (first 5): %+v", reviews[:min(len(reviews), 5)])
+	log.Printf("Successfully fetched %d reviews for book ID: %s", len(reviews), bookIDParam)
+
+	log.Printf("Reviews being sent to frontend (first 5): %+v", reviews[:min(len(reviews), 5)])
 
 	c.JSON(http.StatusOK, gin.H{
 		"reviews":        reviews,
@@ -292,7 +281,6 @@ func UpdateReview(c *gin.Context) {
 		return
 	}
 
-	// Get user from context (set by auth middleware)
 	userRaw, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
@@ -300,7 +288,6 @@ func UpdateReview(c *gin.Context) {
 	}
 	email := userRaw.(string)
 
-	// Get user details from database
 	var user models.User
 	userCollection := config.DB.Database("bookwarm").Collection("users")
 	if err := userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user); err != nil {
@@ -310,14 +297,12 @@ func UpdateReview(c *gin.Context) {
 
 	collection := config.DB.Database("bookwarm").Collection("reviews")
 
-	// Check if user owns the review
 	var review models.Review
 	if err := collection.FindOne(c, bson.M{"_id": reviewID}).Decode(&review); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Review not found"})
 		return
 	}
 
-	// Compare reviewer name with user's display name
 	if review.ReviewerName != user.DisplayName {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
 		return
@@ -335,11 +320,9 @@ func UpdateReview(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
 		return
 	}
-
-	// Get enriched review data
 	enrichedReview, err := GetReviewByID(reviewID)
 	if err != nil {
-		log.Printf("❌ Failed to fetch enriched review: %v", err)
+		log.Printf("Failed to fetch enriched review: %v", err)
 		c.JSON(http.StatusOK, gin.H{"review": review})
 		return
 	}
@@ -354,7 +337,6 @@ func DeleteReview(c *gin.Context) {
 		return
 	}
 
-	// Get user from context (set by auth middleware)
 	userRaw, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
@@ -362,7 +344,6 @@ func DeleteReview(c *gin.Context) {
 	}
 	email := userRaw.(string)
 
-	// Get user details from database
 	var user models.User
 	userCollection := config.DB.Database("bookwarm").Collection("users")
 	if err := userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user); err != nil {
@@ -372,14 +353,12 @@ func DeleteReview(c *gin.Context) {
 
 	collection := config.DB.Database("bookwarm").Collection("reviews")
 
-	// Check if user owns the review
 	var review models.Review
 	if err := collection.FindOne(c, bson.M{"_id": reviewID}).Decode(&review); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Review not found"})
 		return
 	}
 
-	// Compare reviewer name with user's display name
 	if review.ReviewerName != user.DisplayName {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
 		return
@@ -393,7 +372,6 @@ func DeleteReview(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Review deleted"})
 }
 
-// เพิ่มฟังก์ชันสำหรับดึงรีวิวของ user
 func GetUserReviews(c *gin.Context) {
 	userRaw, exists := c.Get("user")
 	if !exists {
@@ -402,7 +380,6 @@ func GetUserReviews(c *gin.Context) {
 	}
 	email := userRaw.(string)
 
-	// หา display name
 	var user models.User
 	userCollection := config.DB.Database("bookwarm").Collection("users")
 	if err := userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user); err != nil {

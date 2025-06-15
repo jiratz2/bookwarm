@@ -35,7 +35,6 @@ export default function Home() {
     }
   }, []);
 
-  // Check club membership
   const checkClubMembership = async (clubId) => {
     const token = localStorage.getItem("token");
     if (!token || !clubId) return false;
@@ -68,8 +67,6 @@ export default function Home() {
         const data = await res.json();
         console.log("Random posts data:", data);
         setRandomPosts(data.posts || []);
-        
-        // Check memberships for each post's club
         const membershipChecks = {};
         for (const post of data.posts || []) {
           if (post.club_id) {
@@ -77,8 +74,7 @@ export default function Home() {
           }
         }
         setClubMemberships(membershipChecks);
-        
-        // Fetch replies for each post
+
         data.posts?.forEach(post => fetchReplies(post._id));
       } else {
         toast.error("Failed to fetch posts");
@@ -105,9 +101,7 @@ export default function Home() {
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("You must be logged in to like posts");
-      setTimeout(() => {
-        router.push("/login");
-      }, 1500); // Wait for 1.5 seconds before redirecting
+      router.push("/login"); 
       return;
     }
   
@@ -127,7 +121,6 @@ export default function Home() {
   
       if (response.ok) {
         toast.success(data.message);
-        // Update the specific post's like status instead of fetching all posts
         setRandomPosts(prevPosts => 
           prevPosts.map(post => {
             if (post._id === postId) {
@@ -204,7 +197,6 @@ export default function Home() {
     }
   };
 
-  // Function to check if the current user has liked the post
   const hasUserLikedPost = (post) => {
     const token = localStorage.getItem("token");
     if (!token || !post.likes) return false;
@@ -218,7 +210,6 @@ export default function Home() {
     }
   };
 
-  // Function to check if the current user has liked the reply
   const hasUserLikedReply = (reply) => {
     const token = localStorage.getItem("token");
     if (!token || !reply.likes) return false;

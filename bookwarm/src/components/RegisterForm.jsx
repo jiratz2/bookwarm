@@ -136,7 +136,7 @@ function RegisterForm() {
         required
       />
       <div className="mt-2 ml-5 text-sm font-light space-y-1">
-        {/* Check for minimum length */}
+
         <div className="flex items-center gap-2">
           {password.length >= 8 ? (
             <IoIosCheckmark className="text-green-500" />
@@ -148,7 +148,6 @@ function RegisterForm() {
           </p>
         </div>
 
-        {/* Check for letters */}
         <div className="flex items-center gap-2">
           {/[a-zA-Z]/.test(password) ? (
             <IoIosCheckmark className="text-green-500" />
@@ -160,7 +159,6 @@ function RegisterForm() {
           </p>
         </div>
 
-        {/* Check for numbers */}
         <div className="flex items-center gap-2">
           {/\d/.test(password) ? (
             <IoIosCheckmark className="text-green-500" />
@@ -172,7 +170,6 @@ function RegisterForm() {
           </p>
         </div>
 
-        {/* Check for special characters */}
         <div className="flex items-center gap-2">
           {/[!@#$%^&*(),.?":{}|<>]/.test(password) ? (
             <IoIosCheckmark className="text-green-500" />

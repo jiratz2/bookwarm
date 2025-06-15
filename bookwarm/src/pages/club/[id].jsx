@@ -23,7 +23,7 @@ const ClubProfile = () => {
   const [currentUserId, setCurrentUserId] = useState("");
 
   const fetchClubs = async () => {
-    if (!id) return; // ต้องรอให้ id พร้อมก่อน
+    if (!id) return; 
     setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -60,12 +60,10 @@ const ClubProfile = () => {
   const getImageUrl = (coverImage) => {
     if (!coverImage) return null;
 
-    // ถ้าเป็น URL เต็ม (https://...) ใช้เลย
     if (coverImage.startsWith("http")) {
       return coverImage;
     }
 
-    // ถ้าเป็น path ภายใน ให้เติม host
     if (coverImage.startsWith("/uploads/")) {
       return `http://localhost:8080${coverImage}`;
     }
@@ -107,7 +105,6 @@ const ClubProfile = () => {
       if (res.ok) {
         toast.success("Joined club!");
         fetchClubs();
-        // Refresh the page after joining
         window.location.reload();
       } else {
         toast.error("Failed to join club.");
@@ -129,7 +126,6 @@ const ClubProfile = () => {
       if (res.ok) {
         toast.success("Left club.");
         fetchClubs();
-        // Refresh the page after leaving
         window.location.reload();
       } else {
         toast.error("Failed to leave club.");

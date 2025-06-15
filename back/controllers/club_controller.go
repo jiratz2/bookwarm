@@ -18,10 +18,8 @@ import (
 	"log"
 )
 
-// CreateClub สร้าง Club ใหม่
-
 func CreateClub(c *gin.Context) {
-	// Parse form
+
 	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form"})
 		return
@@ -30,13 +28,11 @@ func CreateClub(c *gin.Context) {
 	name := c.PostForm("name")
 	description := c.PostForm("description")
 
-	// ตรวจสอบ required fields
 	if name == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Club name is required"})
 		return
 	}
 
-	// ดึงผู้ใช้
 	userRaw, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
@@ -44,7 +40,6 @@ func CreateClub(c *gin.Context) {
 	}
 	email := userRaw.(string)
 
-	// หา user
 	var user models.User
 	userCollection := config.DB.Database("bookwarm").Collection("users")
 	err := userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
@@ -53,7 +48,7 @@ func CreateClub(c *gin.Context) {
 		return
 	}
 
-	// สร้าง club object
+
 	club := models.Club{
 		ID:          primitive.NewObjectID(),
 		Name:        name,
@@ -61,23 +56,19 @@ func CreateClub(c *gin.Context) {
 		OwnerID:     user.ID,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Members:     []primitive.ObjectID{user.ID}, // เพิ่มตรงนี้
+		Members:     []primitive.ObjectID{user.ID}, 
 	}
 
-	// รับไฟล์ภาพ (optional)
 	file, header, err := c.Request.FormFile("cover_image")
 	if err == nil {
-		// มีรูปภาพ
+		
 		defer file.Close()
 
-		// สร้าง path
 		filename := fmt.Sprintf("%d_%s", time.Now().Unix(), header.Filename)
 		savePath := "uploads/" + filename
 
-		// สร้างโฟลเดอร์ถ้ายังไม่มี
 		os.MkdirAll("uploads", os.ModePerm)
 
-		// บันทึกไฟล์
 		out, err := os.Create(savePath)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
@@ -89,11 +80,9 @@ func CreateClub(c *gin.Context) {
 		club.CoverImage = "/uploads/" + filename
 
 	} else {
-		// ไม่มีรูปภาพ ใช้รูป default หรือเว้นว่าง
-		club.CoverImage = "" // หรือ "/uploads/default.jpg"
+		club.CoverImage = "" 
 	}
 
-	// บันทึกข้อมูลคลับ
 	clubCollection := config.DB.Database("bookwarm").Collection("clubs")
 	_, err = clubCollection.InsertOne(context.TODO(), club)
 	if err != nil {
@@ -120,7 +109,6 @@ func GetAllClubs(c *gin.Context) {
 		return
 	}
 
-	// Debug: Print club data
 	for i, club := range clubs {
 		fmt.Printf("Club %d: Name=%s, CoverImage=%s\n", i, club.Name, club.CoverImage)
 	}
@@ -128,7 +116,6 @@ func GetAllClubs(c *gin.Context) {
 	c.JSON(http.StatusOK, clubs)
 }
 
-// GetClubByID ดึง Club ตาม ID
 func GetClubByID(c *gin.Context) {
 	id := c.Param("id")
 	clubID, err := primitive.ObjectIDFromHex(id)
@@ -147,7 +134,6 @@ func GetClubByID(c *gin.Context) {
 		return
 	}
 
-	// ดึงชื่อเจ้าของจาก owner_id
 	var owner models.User
 	err = userCollection.FindOne(context.TODO(), bson.M{"_id": club.OwnerID}).Decode(&owner)
 	if err != nil {
@@ -155,7 +141,6 @@ func GetClubByID(c *gin.Context) {
 		return
 	}
 
-	// ส่งข้อมูล club + owner_display_name
 	c.JSON(http.StatusOK, gin.H{
 		"id":                 club.ID,
 		"name":               club.Name,
@@ -178,7 +163,6 @@ func JoinClub(c *gin.Context) {
 		return
 	}
 
-	// ดึง email จาก JWT
 	userRaw, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -186,7 +170,6 @@ func JoinClub(c *gin.Context) {
 	}
 	email := userRaw.(string)
 
-	// หา user
 	var user models.User
 	userCollection := config.DB.Database("bookwarm").Collection("users")
 	err = userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
@@ -195,10 +178,9 @@ func JoinClub(c *gin.Context) {
 		return
 	}
 
-	// อัปเดต club: เพิ่ม user.ID เข้า members ถ้ายังไม่มี
 	clubCollection := config.DB.Database("bookwarm").Collection("clubs")
 	update := bson.M{
-		"$addToSet": bson.M{"members": user.ID}, // ป้องกันซ้ำ
+		"$addToSet": bson.M{"members": user.ID}, 
 	}
 
 	result, err := clubCollection.UpdateOne(context.TODO(), bson.M{"_id": clubID}, update)
@@ -218,7 +200,6 @@ func LeaveClub(c *gin.Context) {
 		return
 	}
 
-	// ดึง email จาก JWT
 	userRaw, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -226,7 +207,6 @@ func LeaveClub(c *gin.Context) {
 	}
 	email := userRaw.(string)
 
-	// หา user
 	var user models.User
 	userCollection := config.DB.Database("bookwarm").Collection("users")
 	err = userCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
@@ -235,7 +215,6 @@ func LeaveClub(c *gin.Context) {
 		return
 	}
 
-	// ดึงข้อมูลคลับมาก่อน
 	clubCollection := config.DB.Database("bookwarm").Collection("clubs")
 	var club models.Club
 	err = clubCollection.FindOne(context.TODO(), bson.M{"_id": clubID}).Decode(&club)
@@ -244,13 +223,10 @@ func LeaveClub(c *gin.Context) {
 		return
 	}
 
-	// 🔐 เช็คว่า user เป็นเจ้าของคลับหรือไม่
 	if club.OwnerID == user.ID {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Owner cannot leave their own club"})
 		return
 	}
-
-	// ถ้าไม่ใช่เจ้าของ ก็ออกได้
 	update := bson.M{
 		"$pull": bson.M{"members": user.ID},
 	}
@@ -263,7 +239,6 @@ func LeaveClub(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Left club successfully"})
 }
 
-// UpdateClub แก้ไขข้อมูล Club
 func UpdateClub(c *gin.Context) {
 	id := c.Param("id")
 	clubID, err := primitive.ObjectIDFromHex(id)
@@ -286,12 +261,10 @@ func UpdateClub(c *gin.Context) {
 		"updated_at":  time.Now(),
 	}
 
-	// เช็คว่ามีภาพไหม
 	file, header, err := c.Request.FormFile("cover_image")
 	if err == nil {
 		defer file.Close()
 
-		// สร้าง path
 		filename := fmt.Sprintf("%d_%s", time.Now().Unix(), header.Filename)
 		savePath := "uploads/" + filename
 		os.MkdirAll("uploads", os.ModePerm)
@@ -317,7 +290,6 @@ func UpdateClub(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Club updated successfully", "id": clubID})
 }
 
-// DeleteClub ลบ Club
 func DeleteClub(c *gin.Context) {
 	id := c.Param("id")
 	clubID, err := primitive.ObjectIDFromHex(id)
@@ -337,44 +309,42 @@ func DeleteClub(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Club deleted successfully"})
 }
 
-// GetClubsByUser ดึง Club ที่ผู้ใช้เป็นสมาชิกหรือเป็นเจ้าของ
 func GetClubsByUser(c *gin.Context) {
-	log.Println("Attempting to fetch clubs for user...") // Log start
-	// 🔐 ดึง user ID จาก context ที่ middleware ใส่ไว้
+	log.Println("Attempting to fetch clubs for user...") 
+
 	userIDRaw, exists := c.Get("userId")
-	log.Printf("UserID from context: %v, exists: %v\n", userIDRaw, exists) // Log context value
+	log.Printf("UserID from context: %v, exists: %v\n", userIDRaw, exists) 
 
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in context"})
-		log.Println("User ID not found in context. Aborting.") // Log absence
+		log.Println("User ID not found in context. Aborting.") 
 		return
 	}
 
 	userIDStr := userIDRaw.(string)
-	log.Printf("Attempting to convert UserID string to ObjectID: %s\n", userIDStr) // Log string value
+	log.Printf("Attempting to convert UserID string to ObjectID: %s\n", userIDStr) 
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid User ID format in context"})
-		log.Printf("Error converting UserID to ObjectID: %v\n", err) // Log conversion error
+		log.Printf("Error converting UserID to ObjectID: %v\n", err) 
 		return
 	}
 
-	log.Printf("Successfully converted UserID to ObjectID: %s\n", userID.Hex()) // Log success
+	log.Printf("Successfully converted UserID to ObjectID: %s\n", userID.Hex()) 
 	clubCollection := config.DB.Database("bookwarm").Collection("clubs")
 
-	// หา clubs ที่ user เป็นเจ้าของหรือเป็นสมาชิก
 	filter := bson.M{
 		"$or": []bson.M{
 			{"owner_id": userID},
 			{"members": userID},
 		},
 	}
-	log.Printf("Fetching clubs with filter: %+v\n", filter) // Log filter
+	log.Printf("Fetching clubs with filter: %+v\n", filter)
 
 	cursor, err := clubCollection.Find(context.TODO(), filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user's clubs from DB"})
-		log.Printf("Database query error: %v\n", err) // Log DB error
+		log.Printf("Database query error: %v\n", err)
 		return
 	}
 	defer cursor.Close(context.TODO())
@@ -382,19 +352,17 @@ func GetClubsByUser(c *gin.Context) {
 	var clubs []models.Club
 	if err := cursor.All(context.TODO(), &clubs); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode user's clubs from DB"})
-		log.Printf("Database decoding error: %v\n", err) // Log decode error
+		log.Printf("Database decoding error: %v\n", err) 
 		return
 	}
 
-	log.Printf("Successfully fetched %d clubs\n", len(clubs)) // Log success count
+	log.Printf("Successfully fetched %d clubs\n", len(clubs)) 
 	c.JSON(http.StatusOK, clubs)
 }
 
-// GetRecommendedClubs returns clubs sorted by member count
 func GetRecommendedClubs(c *gin.Context) {
 	log.Println("Getting recommended clubs...")
 	
-	// Get top 6 clubs with most members
 	pipeline := mongo.Pipeline{
 		{{Key: "$addFields", Value: bson.D{
 			{Key: "member_count", Value: bson.D{
@@ -454,7 +422,6 @@ func GetRecommendedClubs(c *gin.Context) {
 
 	log.Printf("Found %d recommended clubs\n", len(clubs))
 
-	// Convert ObjectIDs to strings
 	for i := range clubs {
 		if id, ok := clubs[i]["_id"].(primitive.ObjectID); ok {
 			clubs[i]["_id"] = id.Hex()
@@ -477,7 +444,6 @@ func GetRecommendedClubs(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"clubs": clubs})
 }
 
-// CheckMembership checks if the current user is a member of the club
 func CheckMembership(c *gin.Context) {
 	clubIDHex := c.Param("id")
 	clubID, err := primitive.ObjectIDFromHex(clubIDHex)
@@ -497,7 +463,6 @@ func CheckMembership(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"isMember": isMember})
 }
 
-// GetClubsByUserID ดึง Club ที่ผู้ใช้ตาม ID ที่ระบุเป็นสมาชิกหรือเป็นเจ้าของ
 func GetClubsByUserID(c *gin.Context) {
 	userId := c.Param("userId")
 	userID, err := primitive.ObjectIDFromHex(userId)
@@ -508,7 +473,6 @@ func GetClubsByUserID(c *gin.Context) {
 
 	clubCollection := config.DB.Database("bookwarm").Collection("clubs")
 
-	// หา clubs ที่ user เป็นเจ้าของหรือเป็นสมาชิก
 	filter := bson.M{
 		"$or": []bson.M{
 			{"owner_id": userID},

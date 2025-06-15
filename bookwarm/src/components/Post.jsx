@@ -17,7 +17,6 @@ const Post = ({ clubId }) => {
   const [replyContent, setReplyContent] = useState({});
   const [isClubMember, setIsClubMember] = useState(false);
 
-  // Check if user is a club member
   const checkClubMembership = async () => {
     const token = localStorage.getItem("token");
     if (!token || !clubId) return;
@@ -40,7 +39,6 @@ const Post = ({ clubId }) => {
     checkClubMembership();
   }, [clubId]);
 
-  // ดึงโพสต์ทั้งหมดของคลับ
   const fetchPosts = async () => {
     if (!clubId) {
       setError("Club ID is required");
@@ -74,12 +72,12 @@ const Post = ({ clubId }) => {
           setPosts([]);
         }
       } else {
-        console.error("❌ Failed to fetch posts:", data);
+        console.error("Failed to fetch posts:", data);
         setError(data.error || "Failed to load posts");
         toast.error(data.error || "Failed to load posts");
       }
     } catch (err) {
-      console.error("❌ Network error:", err);
+      console.error("Network error:", err);
       setError("Network error. Please check your connection.");
       toast.error("Network error. Please check your connection.");
     } finally {
@@ -87,7 +85,6 @@ const Post = ({ clubId }) => {
     }
   };
 
-  // ไลก์/ไม่ไลก์โพสต์
   const handleLikeToggle = async (postId) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -117,12 +114,11 @@ const Post = ({ clubId }) => {
         toast.error(data.error || "Failed to toggle like");
       }
     } catch (err) {
-      console.error("❌ Like toggle error:", err);
+      console.error("Like toggle error:", err);
       toast.error("Network error");
     }
   };
 
-  // ลบโพสต์
   const handleDeletePost = async (postId) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -154,7 +150,7 @@ const Post = ({ clubId }) => {
         toast.error(data.error || "Failed to delete post");
       }
     } catch (err) {
-      console.error("❌ Delete error:", err);
+      console.error("Delete error:", err);
       toast.error("Network error");
     }
   };
@@ -193,7 +189,6 @@ const Post = ({ clubId }) => {
     }
   };
 
-  // ไลก์/ไม่ไลก์ reply
   const handleLikeReply = async (replyId, postId) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -223,14 +218,12 @@ const Post = ({ clubId }) => {
     fetchPosts();
   }, [clubId]);
 
-  // useEffect สำหรับ fetch replies
   useEffect(() => {
     posts.forEach(post => {
       fetchReplies(post._id);
     });
   }, [posts]);
 
-  // ฟังก์ชันช่วยจัดรูปแบบวันที่
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -251,7 +244,6 @@ const Post = ({ clubId }) => {
     });
   };
 
-  // ฟังก์ชันจัดการ URL รูปภาพ
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) return null;
 
@@ -269,7 +261,6 @@ const Post = ({ clubId }) => {
     return `http://localhost:8080/${imageUrl}`;
   };
 
-  // ตรวจสอบว่าผู้ใช้เป็นเจ้าของโพสต์หรือไม่
   const isPostOwner = (post) => {
     const token = localStorage.getItem("token");
     if (!token) return false;
@@ -282,7 +273,6 @@ const Post = ({ clubId }) => {
     }
   };
 
-  // ฟังก์ชันแสดงรูปโปรไฟล์หรือ initial
   const renderUserAvatar = (post) => {
     if (post.user_profile_image) {
       return (
@@ -291,7 +281,6 @@ const Post = ({ clubId }) => {
           alt={post.user_display_name || post.user_username || "User"}
           className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
           onError={(e) => {
-            // ถ้าโหลดรูปไม่ได้ให้แสดง initial แทน
             e.target.style.display = 'none';
             e.target.nextSibling.style.display = 'flex';
           }}
@@ -309,7 +298,6 @@ const Post = ({ clubId }) => {
     );
   };
 
-  // ตรวจสอบว่าผู้ใช้เป็นเจ้าของ reply หรือไม่
   const isReplyOwner = (reply) => {
     const token = localStorage.getItem("token");
     if (!token) return false;
@@ -322,7 +310,6 @@ const Post = ({ clubId }) => {
     }
   };
 
-  // ลบ reply
   const handleDeleteReply = async (replyId, postId) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -351,7 +338,6 @@ const Post = ({ clubId }) => {
     }
   };
 
-  // Function to check if the current user has liked the post
   const hasUserLikedPost = (post) => {
     const token = localStorage.getItem("token");
     if (!token || !post.likes) return false;
@@ -365,7 +351,6 @@ const Post = ({ clubId }) => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="space-y-4">
@@ -377,7 +362,6 @@ const Post = ({ clubId }) => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="space-y-4">
@@ -395,7 +379,6 @@ const Post = ({ clubId }) => {
     );
   }
 
-  // Empty state
   if (posts.length === 0) {
     return (
       <div className="space-y-4">
@@ -426,7 +409,6 @@ const Post = ({ clubId }) => {
         pauseOnHover
         theme="light"
       />
-      {/* <CreatePostForm clubId={clubId} onPostCreated={fetchPosts} />*/}
       {loading && <p>Loading posts...</p>}
       {error && <p className="text-red-500">Error: {error}</p>}
 
@@ -435,10 +417,10 @@ const Post = ({ clubId }) => {
           key={post._id}
           className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow"
         >
-          {/* Header ของโพสต์ */}
+      
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center space-x-3">
-              {/* Avatar/Profile Image */}
+            
               <div className="relative">
                 {post.user_profile_image ? (
                   <img
@@ -458,7 +440,7 @@ const Post = ({ clubId }) => {
                     }
                   </div>
                 )}
-                {/* Fallback avatar (hidden by default) */}
+           
                 <div 
                   className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md"
                   style={{ display: 'none' }}
@@ -471,13 +453,13 @@ const Post = ({ clubId }) => {
               </div>
               
               <div>
-                {/* Wrap username in Link */}
+  
                 <Link href={`/profile/${post.user_id}`} className="cursor-pointer hover:underline">
                   <h4 className="font-semibold text-gray-900 text-lg">
                     {post.user_display_name || post.user_username || "Unknown User"}
                   </h4>
                 </Link>
-                {/* แสดง username ถ้ามี display_name */}
+            
                 {post.user_display_name && post.user_username && (
                   <p className="text-sm text-gray-500">@{post.user_username}</p>
                 )}
@@ -498,8 +480,7 @@ const Post = ({ clubId }) => {
                 </div>
               </div>
             </div>
-            
-            {/* ปุ่มลบสำหรับเจ้าของโพสต์ */}
+     
             {isPostOwner(post) && (
               <button
                 onClick={() => handleDeletePost(post._id)}
@@ -511,26 +492,25 @@ const Post = ({ clubId }) => {
             )}
           </div>
 
-          {/* เนื้อหาโพสต์ */}
           <div className="mb-4">
             <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
               {post.content}
             </p>
           </div>
 
-          {/* Actions */}
+
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => handleLikeToggle(post._id)}
                 className={
                   `flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors px-2 py-1 rounded hover:bg-gray-50 ` +
-                  `${hasUserLikedPost(post) ? 'text-red-500' : ''}` // Apply red color if liked
+                  `${hasUserLikedPost(post) ? 'text-red-500' : ''}` 
                 }
                 title={localStorage.getItem("token") ? "Like/Unlike post" : "Please log in to like posts"}
               >
                 <span className="text-lg">
-                  {hasUserLikedPost(post) ? <FaHeart /> : <FaRegHeart />} {/* Conditional rendering of icon */}
+                  {hasUserLikedPost(post) ? <FaHeart /> : <FaRegHeart />} 
                 </span>
                 <span className="text-sm font-medium">
                   {post.likes_count || post.likes?.length || 0}
@@ -545,7 +525,7 @@ const Post = ({ clubId }) => {
             </div>
           </div>
 
-          {/* Only show reply button for club members */}
+    
           {isClubMember && (
             <button
               onClick={() => {
@@ -576,17 +556,16 @@ const Post = ({ clubId }) => {
             <div className="text-red-500 text-sm mt-2">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</div>
           )}
 
-          {/* แสดง replies เฉพาะของโพสต์นี้ */}
           {(replies[post._id] || []).map(reply => {
             console.log("reply object:", reply);
-            // Function to check if the current user has liked this reply
+       
             const hasUserLikedReply = (reply) => {
               const token = localStorage.getItem("token");
               if (!token || !reply.likes) return false;
               try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 const userId = payload.id;
-                // reply.likes is an array of user IDs who liked the reply
+        
                 return reply.likes.includes(userId);
               } catch (e) {
                 console.error("Error decoding token for reply like check:", e);
@@ -596,7 +575,7 @@ const Post = ({ clubId }) => {
 
             return (
               <div key={reply._id} className="flex items-start space-x-3 mt-4 bg-gray-50 rounded-lg p-3">
-                {/* รูปโปรไฟล์ */}
+             
                 {reply.user_profile_image ? (
                   <img
                     src={getImageUrl(reply.user_profile_image)}
@@ -612,7 +591,7 @@ const Post = ({ clubId }) => {
                 )}
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    {/* Wrap username in Link */}
+            
                     <Link href={`/profile/${reply.user_id}`} className="cursor-pointer hover:underline">
                       <span className="font-semibold text-gray-900 text-base">
                         {reply.user_display_name || reply.user_username || "Unknown User"}
@@ -624,7 +603,7 @@ const Post = ({ clubId }) => {
                   </div>
                   <div className="text-gray-800 mt-1">{reply.content}</div>
                 </div>
-                {/* ปุ่มไลก์ */}
+           
                 <button
                   className={
                     `ml-2 text-lg p-1 rounded hover:bg-gray-100 transition-colors flex items-center ` +
@@ -636,7 +615,7 @@ const Post = ({ clubId }) => {
                   {hasUserLikedReply(reply) ? <FaHeart /> : <FaRegHeart />} {/* Conditional rendering of icon */}
                   <span className="text-sm font-medium ml-1">{reply.likes ? reply.likes.length : 0}</span>
                 </button>
-                {/* ปุ่มลบ reply เฉพาะเจ้าของ */}
+ 
                 {isReplyOwner(reply) && (
                   <button
                     className="ml-2 text-gray-400 hover:text-gray-700 text-lg p-1 rounded transition-colors flex items-center"

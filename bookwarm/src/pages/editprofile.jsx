@@ -33,14 +33,12 @@ export default function EditProfile() {
         setBio(data.bio || "");
         setEmail(data.email || "");
 
-        // Set profile picture preview if available in backend
         if (data.profile_img_url) {
           setProfilePicturePreview(data.profile_img_url);
         } else {
           setProfilePicturePreview(null);
         }
 
-        // Set cover photo preview if available in backend
         if (data.bg_img_url) {
           setCoverPhotoPreview(data.bg_img_url);
         } else {

@@ -46,7 +46,6 @@ function ClubCard({ club, className, clubId }) {
                 onError={(e) => {
                   console.log("Image failed to load:", e.target.src);
                   e.target.style.display = 'none';
-                  // แสดงข้อความแทน
                   e.target.parentElement.innerHTML = '<div class="w-full h-full bg-gray-200 flex items-center justify-center"><span class="text-gray-500">Image not found</span></div>';
                 }}
                 onLoad={() => {
@@ -65,8 +64,7 @@ function ClubCard({ club, className, clubId }) {
           <div className="flex items-center justify-between p-2 pt-0">
             <div className="flex items-center text-sm text-muted-foreground">
               <Users className="mr-1 h-3.5 w-3.5" />
-              {/* แก้ไขเพื่อแสดงจำนวนสมาชิกจริง */}
-              {/* ตรวจสอบและแสดงจำนวนสมาชิก หรือ 0 ถ้าไม่มี */} 
+
               <span>{(club.members ?? []).length} members</span>
             </div>
           </div>

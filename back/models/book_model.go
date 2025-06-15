@@ -18,7 +18,7 @@ type Book struct {
 	PublishYear int                  `json:"publishYear" bson:"publishYear"`
 	PageCount   int                  `json:"pageCount" bson:"pageCount"`
 	Rating      float64              `json:"rating" bson:"rating"`
-	CoverImage  string               `json:"coverImage" bson:"coverImage"` // URL ของรูปหน้าปกหนังสือ
+	CoverImage  string               `json:"coverImage" bson:"coverImage"`
 	CreatedAt   time.Time            `json:"createdAt" bson:"createdAt"`
 	UpdatedAt   time.Time            `json:"updatedAt" bson:"updatedAt"`
 }

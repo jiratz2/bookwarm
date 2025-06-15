@@ -105,7 +105,6 @@ const MarkButton = ({ bookId, onAchievementUnlock, bookTitle }) => {
         if (!currentMarkId) {
           setCurrentMarkId(data.mark_id);
         }
-        // Check for unlocked achievement
         if (data.achievement && onAchievementUnlock) {
           onAchievementUnlock(data.achievement, bookTitle);
         }

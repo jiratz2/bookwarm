@@ -40,7 +40,7 @@ export default function CreateClubPage() {
       setDescription('');
       setCoverImage('');
     } catch (err) {
-      setError(`❌ ${err.message}`);
+      setError(` ${err.message}`);
     }
   };
 

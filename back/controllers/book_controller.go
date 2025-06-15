@@ -104,7 +104,6 @@ func GetBookByID(c *gin.Context) {
 
 	collection := config.DB.Database("bookwarm").Collection("books")
 
-	// สร้าง pipeline สำหรับ Aggregation
 	pipeline := []bson.M{
 		{
 			"$match": bson.M{
@@ -209,7 +208,6 @@ func UpdateBook(c *gin.Context) {
 		return
 	}
 
-	// ดึงข้อมูลหนังสือที่อัพเดทแล้วพร้อมข้อมูลที่เชื่อมโยง
 	pipeline := []bson.M{
 		{
 			"$match": bson.M{
@@ -249,7 +247,7 @@ func UpdateBook(c *gin.Context) {
 			},
 		},
 		{
-			"$unset": []string{"authorId", "category_id", "tagIds"}, // ลบฟิลด์ที่ไม่ต้องการ
+			"$unset": []string{"authorId", "category_id", "tagIds"}, 
 		},
 	}
 
@@ -275,7 +273,6 @@ func UpdateBook(c *gin.Context) {
 	c.JSON(http.StatusOK, results[0])
 }
 
-// GET /api/books/search?query=harry
 func SearchBooks(c *gin.Context) {
     query := c.Query("query")
     if query == "" {
@@ -288,7 +285,7 @@ func SearchBooks(c *gin.Context) {
     filter := bson.M{
         "title": bson.M{
             "$regex":   query,
-            "$options": "i", // case-insensitive
+            "$options": "i", 
         },
     }
 
@@ -325,7 +322,6 @@ func DeleteBook(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Book deleted successfully"})
 }
 
-// GetRecommendedBooks returns books with high ratings
 func GetRecommendedBooks(c *gin.Context) {
 	log.Println("Getting recommended books...")
 	
@@ -390,7 +386,6 @@ func GetRecommendedBooks(c *gin.Context) {
 
 	log.Printf("Found %d recommended books", len(recommendedBooks))
 
-	// Convert ObjectIDs to strings and round average rating
 	for _, book := range recommendedBooks {
 		if id, ok := book["_id"]; ok {
 			if oid, isOID := id.(primitive.ObjectID); isOID {
@@ -398,7 +393,6 @@ func GetRecommendedBooks(c *gin.Context) {
 			}
 		}
 
-		// Log the cover_image value
 		if coverImage, ok := book["coverImage"]; ok {
 			log.Printf("Book %s cover_image: %v", book["_id"], coverImage)
 		} else {

@@ -11,7 +11,6 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const searchTimeoutRef = useRef(null);
 
-  // ฟังก์ชันค้นหาหนังสือพร้อม debounce และรองรับภาษาไทย
   const handleBookSearch = useCallback(async (query) => {
     setBookQuery(query);
     
@@ -21,17 +20,15 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
       return;
     }
 
-    // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
     setIsSearching(true);
 
-    // Debounce search
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        // URL encode สำหรับภาษาไทย
+
         const encodedQuery = encodeURIComponent(query.trim());
         console.log("🔍 Searching for:", query, "| Encoded:", encodedQuery);
 
@@ -45,10 +42,9 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
           }
         );
 
-        // ตรวจสอบว่า response เป็น JSON หรือไม่
         const contentType = res.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
-          console.error("❌ Non-JSON response received");
+          console.error(" Non-JSON response received");
           setBookResults([]);
           toast.error("Invalid response format from server");
           return;
@@ -58,7 +54,6 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
         console.log("📚 Search results:", data);
 
         if (res.ok) {
-          // ตรวจสอบให้แน่ใจว่า data ไม่เป็น null/undefined
           if (data) {
             if (Array.isArray(data)) {
               setBookResults(data);
@@ -71,17 +66,17 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
             setBookResults([]);
           }
         } else {
-          console.error("❌ Book search failed:", data);
+          console.error(" Book search failed:", data);
           setBookResults([]);
           if (data && data.error) {
             toast.error(`Search failed: ${data.error}`);
           }
         }
       } catch (err) {
-        console.error("❌ Network error during book search:", err);
+        console.error(" Network error during book search:", err);
         setBookResults([]);
         
-        // ตรวจสอบประเภทของ error
+        
         if (err.name === 'SyntaxError') {
           toast.error("Invalid response from server");
         } else if (err.message.includes('Failed to fetch')) {
@@ -92,7 +87,7 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
       } finally {
         setIsSearching(false);
       }
-    }, 300); // Debounce 300ms
+    }, 300); 
   }, []);
 
   const selectBook = (book) => {
@@ -112,7 +107,7 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (isSubmitting) return; // Prevent double submission
+    if (isSubmitting) return; 
     
     const token = localStorage.getItem("token");
     if (!token) {
@@ -132,13 +127,12 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
 
     setIsSubmitting(true);
 
-    // สร้าง payload
     const payload = {
       content: content.trim(),
       club_id: clubId,
     };
 
-    // เพิ่ม book_id ถ้ามีการเลือกหนังสือ
+ 
     if (selectedBookId) {
       payload.book_id = selectedBookId;
     }
@@ -159,14 +153,13 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
       console.log("📮 Post response:", responseData);
 
       if (res.ok) {
-        // Reset form
+ 
         setContent("");
         setSelectedBookId(null);
         setSelectedBookTitle("");
         setBookQuery("");
         setBookResults([]);
-        
-        // Refresh post list
+
         if (onPostCreated) {
           onPostCreated();
         }
@@ -184,7 +177,6 @@ const CreatePostForm = ({ clubId, onPostCreated }) => {
     }
   };
 
-  // Cleanup timeout on unmount
   React.useEffect(() => {
     return () => {
       if (searchTimeoutRef.current) {

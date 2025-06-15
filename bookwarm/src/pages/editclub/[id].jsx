@@ -13,10 +13,9 @@ function Editclub() {
   const [coverPhotoPreview, setCoverPhotoPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [originalCoverUrl, setOriginalCoverUrl] = useState(null); // เก็บ URL ดิบจาก API
+  const [originalCoverUrl, setOriginalCoverUrl] = useState(null); 
   const coverPhotoInputRef = useRef(null);
 
-  // แก้ไขใน useEffect - เปลี่ยนจาก cover_image_url เป็น cover_image
 useEffect(() => {
   if (!clubId) return;
 
@@ -37,15 +36,13 @@ useEffect(() => {
 
       const data = await res.json();
       console.log("Complete Club data:", data);
-      console.log("Cover image from API:", data.cover_image); // เปลี่ยนเป็น cover_image
+      console.log("Cover image from API:", data.cover_image); 
 
       setClubName(data.name);
       setDescription(data.description);
 
-      // เก็บ URL ดิบ - เปลี่ยนเป็น cover_image
       setOriginalCoverUrl(data.cover_image);
 
-      // แปลง URL สำหรับแสดงผล - เปลี่ยนเป็น cover_image
       const displayUrl = getImageUrl(data.cover_image);
       console.log("Final Preview URL:", displayUrl);
       setCoverPhotoPreview(displayUrl);
@@ -154,12 +151,12 @@ useEffect(() => {
       </div>
 
       <div className="flex justify-center items-start m-10">
-        {/* Cover Photo */}
+
         <div className="relative">
           <div className="w-50 h-50 md:h-60 lg:h-50 flex justify-center bg-gray-200 relative">
             {coverPhotoPreview ? (
               <img
-                src={coverPhotoPreview} // ใช้ URL ที่แปลงแล้ว
+                src={coverPhotoPreview} 
                 alt="Cover"
                 className="w-64 h-64 object-cover"
               />

@@ -14,7 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// ฟังก์ชันตรวจสอบว่า user เป็นสมาชิกของ club หรือไม่
 func isClubMember(userID, clubID primitive.ObjectID) bool {
 	clubCollection := config.DB.Database("bookwarm").Collection("clubs")
 	
@@ -43,10 +42,9 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	// Debug: แสดงข้อมูลที่ได้รับ
+
 	log.Printf("📝 Received post data: %+v", post)
 
-	// เช็กและ fallback จาก query string ถ้า club_id ใน body เป็น zero
 	if post.ClubID.IsZero() {
 		clubIDHex := c.Query("clubId")
 		if clubIDHex == "" {
@@ -63,7 +61,6 @@ func CreatePost(c *gin.Context) {
 		post.ClubID = clubID
 	}
 
-	// ดึง user ID จาก context
 	userIDStr := c.MustGet("userId").(string)
 	userID, err := primitive.ObjectIDFromHex(userIDStr)
 	if err != nil {
@@ -72,16 +69,14 @@ func CreatePost(c *gin.Context) {
 		return
 	}
 
-	// ตรวจสอบว่าเป็นสมาชิกของ club หรือไม่
 	if !isClubMember(userID, post.ClubID) {
 		log.Printf("❌ User %s is not a member of club %s", userID, post.ClubID)
 		c.JSON(http.StatusForbidden, gin.H{"error": "You are not a member of this club"})
 		return
 	}
 
-	// ตรวจสอบและแปลง book_id ถ้ามี
 	if post.BookID != nil && !post.BookID.IsZero() {
-		// ตรวจสอบว่าหนังสือมีอยู่จริงหรือไม่
+
 		bookCollection := config.DB.Database("bookwarm").Collection("books")
 		count, err := bookCollection.CountDocuments(context.TODO(), bson.M{"_id": post.BookID})
 		if err != nil || count == 0 {
@@ -91,13 +86,11 @@ func CreatePost(c *gin.Context) {
 		}
 	}
 
-	// ตั้งค่าข้อมูลโพสต์
 	post.ID = primitive.NewObjectID()
 	post.UserID = userID
 	post.CreatedAt = time.Now()
 	post.UpdatedAt = time.Now()
-	
-	// Initialize likes array if nil
+
 	if post.Likes == nil {
 		post.Likes = []primitive.ObjectID{}
 	}
@@ -120,7 +113,6 @@ func CreatePost(c *gin.Context) {
 	})
 }
 
-// แก้ไขใน GetPostsByClub function
 func GetPostsByClub(c *gin.Context) {
 	clubIDHex := c.Query("clubId")
 	if clubIDHex == "" {
@@ -139,7 +131,6 @@ func GetPostsByClub(c *gin.Context) {
 	pipeline := mongo.Pipeline{
 		bson.D{{Key: "$match", Value: bson.M{"club_id": clubID}}},
 
-		// Join กับ users collection
 		bson.D{{Key: "$lookup", Value: bson.M{
 			"from":         "users",
 			"localField":   "user_id",
@@ -148,7 +139,6 @@ func GetPostsByClub(c *gin.Context) {
 		}}},
 		bson.D{{Key: "$unwind", Value: bson.M{"path": "$user", "preserveNullAndEmptyArrays": true}}},
 
-		// Join กับ books collection (optional)
 		bson.D{{Key: "$lookup", Value: bson.M{
 			"from":         "books",
 			"localField":   "book_id",
@@ -157,14 +147,13 @@ func GetPostsByClub(c *gin.Context) {
 		}}},
 		bson.D{{Key: "$unwind", Value: bson.M{"path": "$book", "preserveNullAndEmptyArrays": true}}},
 
-		// Project ข้อมูลที่ต้องการ - เพิ่มข้อมูล user เพิ่มเติม
 		bson.D{{Key: "$project", Value: bson.M{
 			"_id":               1,
 			"content":           1,
 			"club_id":           1,
 			"user_id":           1,
 			"user_display_name": "$user.displayname",
-			"user_profile_image": "$user.profile_img_url", // ใช้ field ตามโมเดล
+			"user_profile_image": "$user.profile_img_url", 
 			"user_username":     "$user.username",
 			"user_email":        "$user.email",
 			"book_id":           1,
@@ -221,7 +210,6 @@ func ToggleLikePost(c *gin.Context) {
 		return
 	}
 
-	// ตรวจสอบว่าเคยไลก์แล้วหรือยัง
 	liked := false
 	for _, id := range post.Likes {
 		if id == userID {
@@ -273,13 +261,11 @@ func DeletePost(c *gin.Context) {
 		return
 	}
 
-	// ตรวจสอบว่าเป็นสมาชิกของ club หรือไม่
 	if !isClubMember(userID, post.ClubID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You are not a member of this club"})
 		return
 	}
 
-	// ตรวจสอบว่าเป็นเจ้าของโพสต์หรือไม่
 	if post.UserID != userID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You are not the owner of this post"})
 		return
@@ -293,7 +279,6 @@ func DeletePost(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Post deleted successfully"})
 }
 
-// GetRandomPosts ดึงโพสต์แบบสุ่ม
 func GetRandomPosts(c *gin.Context) {
 	postCollection := config.DB.Database("bookwarm").Collection("post")
 
